@@ -26,10 +26,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/common/hexutil"
-	"github.com/NiluPlatform/go-nilu/crypto/sha3"
-	"github.com/NiluPlatform/go-nilu/rlp"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 var (
@@ -89,8 +89,8 @@ type Header struct {
 type headerMarshaling struct {
 	Difficulty *hexutil.Big
 	Number     *hexutil.Big
-	GasLimit   hexutil.Uint64
-	GasUsed    hexutil.Uint64
+	GasLimit   *hexutil.Uint64
+	GasUsed    *hexutil.Uint64
 	Time       *hexutil.Big
 	Extra      hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON

@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"math/big"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/common/hexutil"
-	"github.com/NiluPlatform/go-nilu/common/math"
-	"github.com/NiluPlatform/go-nilu/core/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 var _ = (*btHeaderMarshaling)(nil)
@@ -47,8 +47,8 @@ func (b btHeader) MarshalJSON() ([]byte, error) {
 	enc.UncleHash = b.UncleHash
 	enc.ExtraData = b.ExtraData
 	enc.Difficulty = (*math.HexOrDecimal256)(b.Difficulty)
-	enc.GasLimit = math.HexOrDecimal64(b.GasLimit)
-	enc.GasUsed = math.HexOrDecimal64(b.GasUsed)
+	enc.GasLimit = (math.HexOrDecimal64)(b.GasLimit)
+	enc.GasUsed = (math.HexOrDecimal64)(b.GasUsed)
 	enc.Timestamp = (*math.HexOrDecimal256)(b.Timestamp)
 	return json.Marshal(&enc)
 }
@@ -66,7 +66,7 @@ func (b *btHeader) UnmarshalJSON(input []byte) error {
 		StateRoot        *common.Hash
 		TransactionsTrie *common.Hash
 		UncleHash        *common.Hash
-		ExtraData        *hexutil.Bytes
+		ExtraData        hexutil.Bytes
 		Difficulty       *math.HexOrDecimal256
 		GasLimit         *math.HexOrDecimal64
 		GasUsed          *math.HexOrDecimal64
@@ -110,7 +110,7 @@ func (b *btHeader) UnmarshalJSON(input []byte) error {
 		b.UncleHash = *dec.UncleHash
 	}
 	if dec.ExtraData != nil {
-		b.ExtraData = *dec.ExtraData
+		b.ExtraData = dec.ExtraData
 	}
 	if dec.Difficulty != nil {
 		b.Difficulty = (*big.Int)(dec.Difficulty)
