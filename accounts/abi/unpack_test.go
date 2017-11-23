@@ -1,18 +1,18 @@
-// Copyright 2015 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2015 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package abi
 
@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -259,51 +259,6 @@ var unpackTests = []unpackTest{
 		enc:  "000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003",
 		want: [3]*big.Int{big.NewInt(1), big.NewInt(2), big.NewInt(3)},
 	},
-	// struct outputs
-	{
-		def: `[{"name":"int1","type":"int256"},{"name":"int2","type":"int256"}]`,
-		enc: "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
-		want: struct {
-			Int1 *big.Int
-			Int2 *big.Int
-		}{big.NewInt(1), big.NewInt(2)},
-	},
-	{
-		def: `[{"name":"int","type":"int256"},{"name":"Int","type":"int256"}]`,
-		enc: "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
-		want: struct {
-			Int1 *big.Int
-			Int2 *big.Int
-		}{},
-		err: "abi: multiple outputs mapping to the same struct field 'Int'",
-	},
-	{
-		def: `[{"name":"int","type":"int256"},{"name":"_int","type":"int256"}]`,
-		enc: "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
-		want: struct {
-			Int1 *big.Int
-			Int2 *big.Int
-		}{},
-		err: "abi: multiple outputs mapping to the same struct field 'Int'",
-	},
-	{
-		def: `[{"name":"Int","type":"int256"},{"name":"_int","type":"int256"}]`,
-		enc: "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
-		want: struct {
-			Int1 *big.Int
-			Int2 *big.Int
-		}{},
-		err: "abi: multiple outputs mapping to the same struct field 'Int'",
-	},
-	{
-		def: `[{"name":"Int","type":"int256"},{"name":"_","type":"int256"}]`,
-		enc: "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002",
-		want: struct {
-			Int1 *big.Int
-			Int2 *big.Int
-		}{},
-		err: "abi: purely underscored output cannot unpack to struct",
-	},
 }
 
 func TestUnpack(t *testing.T) {
@@ -382,11 +337,6 @@ func TestMethodMultiReturn(t *testing.T) {
 		"",
 		"Can unpack into a slice",
 	}, {
-		&[2]interface{}{&bigint, new(string)},
-		&[2]interface{}{&expected.Int, &expected.String},
-		"",
-		"Can unpack into an array",
-	}, {
 		&[]interface{}{new(int), new(int)},
 		&[]interface{}{&expected.Int, &expected.String},
 		"abi: cannot unmarshal *big.Int in to int",
@@ -409,29 +359,6 @@ func TestMethodMultiReturn(t *testing.T) {
 				require.EqualError(err, tc.error)
 			}
 		})
-	}
-}
-
-func TestMultiReturnWithArray(t *testing.T) {
-	const definition = `[{"name" : "multi", "outputs": [{"type": "uint64[3]"}, {"type": "uint64"}]}]`
-	abi, err := JSON(strings.NewReader(definition))
-	if err != nil {
-		t.Fatal(err)
-	}
-	buff := new(bytes.Buffer)
-	buff.Write(common.Hex2Bytes("000000000000000000000000000000000000000000000000000000000000000900000000000000000000000000000000000000000000000000000000000000090000000000000000000000000000000000000000000000000000000000000009"))
-	buff.Write(common.Hex2Bytes("0000000000000000000000000000000000000000000000000000000000000008"))
-
-	ret1, ret1Exp := new([3]uint64), [3]uint64{9, 9, 9}
-	ret2, ret2Exp := new(uint64), uint64(8)
-	if err := abi.Unpack(&[]interface{}{ret1, ret2}, "multi", buff.Bytes()); err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(*ret1, ret1Exp) {
-		t.Error("array result", *ret1, "!= Expected", ret1Exp)
-	}
-	if *ret2 != ret2Exp {
-		t.Error("int result", *ret2, "!= Expected", ret2Exp)
 	}
 }
 
