@@ -21,24 +21,27 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"math/big"
 	"net"
+	"time"
 
-	"github.com/NiluPlatform/go-nilu/accounts/abi/bind"
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/contracts/chequebook"
-	"github.com/NiluPlatform/go-nilu/contracts/ens"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/ethclient"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/node"
-	"github.com/NiluPlatform/go-nilu/p2p"
-	"github.com/NiluPlatform/go-nilu/p2p/discover"
-	"github.com/NiluPlatform/go-nilu/rpc"
-	"github.com/NiluPlatform/go-nilu/swarm/api"
-	httpapi "github.com/NiluPlatform/go-nilu/swarm/api/http"
-	"github.com/NiluPlatform/go-nilu/swarm/fuse"
-	"github.com/NiluPlatform/go-nilu/swarm/network"
-	"github.com/NiluPlatform/go-nilu/swarm/storage"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/contracts/chequebook"
+	"github.com/ethereum/go-ethereum/contracts/ens"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/node"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/swarm/api"
+	httpapi "github.com/ethereum/go-ethereum/swarm/api/http"
+	"github.com/ethereum/go-ethereum/swarm/fuse"
+	"github.com/ethereum/go-ethereum/swarm/network"
+	"github.com/ethereum/go-ethereum/swarm/storage"
 )
 
 // the swarm stack
@@ -76,7 +79,7 @@ func (self *Swarm) API() *SwarmAPI {
 
 // creates a new swarm service instance
 // implements node.Service
-func NewSwarm(ctx *node.ServiceContext, backend chequebook.Backend, ensClient *ethclient.Client, config *api.Config, swapEnabled, syncEnabled bool, cors string) (self *Swarm, err error) {
+func NewSwarm(ctx *node.ServiceContext, backend chequebook.Backend, ensClientConfigs []ENSClientConfig, config *api.Config, swapEnabled, syncEnabled bool, cors string) (self *Swarm, err error) {
 	if bytes.Equal(common.FromHex(config.PublicKey), storage.ZeroKey) {
 		return nil, fmt.Errorf("empty public key")
 	}
@@ -133,18 +136,22 @@ func NewSwarm(ctx *node.ServiceContext, backend chequebook.Backend, ensClient *e
 	self.dpa = storage.NewDPA(dpaChunkStore, self.config.ChunkerParams)
 	log.Debug(fmt.Sprintf("-> Content Store API"))
 
-	// set up high level api
-	transactOpts := bind.NewKeyedTransactor(self.privateKey)
-
-	if ensClient == nil {
-		log.Warn("No ENS, please specify non-empty --ens-api to use domain name resolution")
-	} else {
-		self.dns, err = ens.NewENS(transactOpts, config.EnsRoot, ensClient)
+	if len(ensClientConfigs) == 1 {
+		self.dns, err = newEnsClient(ensClientConfigs[0].Endpoint, ensClientConfigs[0].ContractAddress, config)
 		if err != nil {
 			return nil, err
 		}
+	} else if len(ensClientConfigs) > 1 {
+		opts := []api.MultiResolverOption{}
+		for _, c := range ensClientConfigs {
+			r, err := newEnsClient(c.Endpoint, c.ContractAddress, config)
+			if err != nil {
+				return nil, err
+			}
+			opts = append(opts, api.MultiResolverOptionWithResolver(r, c.TLD))
+		}
+		self.dns = api.NewMultiResolver(opts...)
 	}
-	log.Debug(fmt.Sprintf("-> Swarm Domain Name Registrar @ address %v", config.EnsRoot.Hex()))
 
 	self.api = api.NewApi(self.dpa, self.dns)
 	// Manifests for Smart Hosting
@@ -154,6 +161,78 @@ func NewSwarm(ctx *node.ServiceContext, backend chequebook.Backend, ensClient *e
 	log.Debug("-> Initializing Fuse file system")
 
 	return self, nil
+}
+
+// ENSClientConfig holds information to construct ENS resolver. If TLD is non-empty,
+// the resolver will be used only for that TLD. If ContractAddress is empty,
+// it will be discovered by the client, or used one from the configuration.
+type ENSClientConfig struct {
+	Endpoint        string
+	ContractAddress string
+	TLD             string
+}
+
+// newEnsClient creates a new ENS client for that is a consumer of
+// a ENS API on a specific endpoint. It is used as a helper function
+// for creating multiple resolvers in NewSwarm function.
+func newEnsClient(endpoint, addr string, config *api.Config) (*ens.ENS, error) {
+	log.Info("connecting to ENS API", "url", endpoint)
+	client, err := rpc.Dial(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("error connecting to ENS API %s: %s", endpoint, err)
+	}
+	ensClient := ethclient.NewClient(client)
+
+	ensRoot := config.EnsRoot
+	if addr != "" {
+		ensRoot = common.HexToAddress(addr)
+	} else {
+		a, err := detectEnsAddr(client)
+		if err == nil {
+			ensRoot = a
+		} else {
+			log.Warn(fmt.Sprintf("could not determine ENS contract address, using default %s", ensRoot), "err", err)
+		}
+	}
+	transactOpts := bind.NewKeyedTransactor(config.Swap.PrivateKey())
+	dns, err := ens.NewENS(transactOpts, ensRoot, ensClient)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug(fmt.Sprintf("-> Swarm Domain Name Registrar %v @ address %v", endpoint, ensRoot.Hex()))
+	return dns, err
+}
+
+// detectEnsAddr determines the ENS contract address by getting both the
+// version and genesis hash using the client and matching them to either
+// mainnet or testnet addresses
+func detectEnsAddr(client *rpc.Client) (common.Address, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var version string
+	if err := client.CallContext(ctx, &version, "net_version"); err != nil {
+		return common.Address{}, err
+	}
+
+	block, err := ethclient.NewClient(client).BlockByNumber(ctx, big.NewInt(0))
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	switch {
+
+	case version == "1" && block.Hash() == params.MainnetGenesisHash:
+		log.Info("using Mainnet ENS contract address", "addr", ens.MainNetAddress)
+		return ens.MainNetAddress, nil
+
+	case version == "3" && block.Hash() == params.TestnetGenesisHash:
+		log.Info("using Testnet ENS contract address", "addr", ens.TestNetAddress)
+		return ens.TestNetAddress, nil
+
+	default:
+		return common.Address{}, fmt.Errorf("unknown version and genesis hash: %s %s", version, block.Hash())
+	}
 }
 
 /*
@@ -220,7 +299,7 @@ func (self *Swarm) Start(srv *p2p.Server) error {
 // stops all component services.
 func (self *Swarm) Stop() error {
 	self.dpa.Stop()
-	err := self.hive.Stop()
+	self.hive.Stop()
 	if ch := self.config.Swap.Chequebook(); ch != nil {
 		ch.Stop()
 		ch.Save()
@@ -230,7 +309,7 @@ func (self *Swarm) Stop() error {
 		self.lstore.DbStore.Close()
 	}
 	self.sfs.Stop()
-	return err
+	return self.config.Save()
 }
 
 // implements the node.Service interface
@@ -301,6 +380,7 @@ func (self *Swarm) SetChequebook(ctx context.Context) error {
 		return err
 	}
 	log.Info(fmt.Sprintf("new chequebook set (%v): saving config file, resetting all connections in the hive", self.config.Swap.Contract.Hex()))
+	self.config.Save()
 	self.hive.DropAll()
 	return nil
 }
@@ -313,9 +393,10 @@ func NewLocalSwarm(datadir, port string) (self *Swarm, err error) {
 		return
 	}
 
-	config := api.NewDefaultConfig()
-	config.Path = datadir
-	config.Init(prvKey)
+	config, err := api.NewConfig(datadir, common.Address{}, prvKey, network.NetworkId)
+	if err != nil {
+		return
+	}
 	config.Port = port
 
 	dpa, err := storage.NewLocalDPA(datadir)
