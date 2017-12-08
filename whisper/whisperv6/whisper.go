@@ -22,17 +22,15 @@ import (
 	crand "crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"math"
 	"runtime"
 	"sync"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/p2p"
-	"github.com/NiluPlatform/go-nilu/rlp"
-	"github.com/NiluPlatform/go-nilu/rpc"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/sync/syncmap"
@@ -76,8 +74,6 @@ type Whisper struct {
 
 	settings syncmap.Map // holds configuration settings that can be dynamically changed
 
-	reactionAllowance int // maximum time in seconds allowed to process the whisper-related messages
-
 	statsMu sync.Mutex // guard stats
 	stats   Statistics // Statistics of whisper node
 
@@ -91,15 +87,14 @@ func New(cfg *Config) *Whisper {
 	}
 
 	whisper := &Whisper{
-		privateKeys:       make(map[string]*ecdsa.PrivateKey),
-		symKeys:           make(map[string][]byte),
-		envelopes:         make(map[common.Hash]*Envelope),
-		expirations:       make(map[uint32]*set.SetNonTS),
-		peers:             make(map[*Peer]struct{}),
-		messageQueue:      make(chan *Envelope, messageQueueLimit),
-		p2pMsgQueue:       make(chan *Envelope, messageQueueLimit),
-		quit:              make(chan struct{}),
-		reactionAllowance: SynchAllowance,
+		privateKeys:  make(map[string]*ecdsa.PrivateKey),
+		symKeys:      make(map[string][]byte),
+		envelopes:    make(map[common.Hash]*Envelope),
+		expirations:  make(map[uint32]*set.SetNonTS),
+		peers:        make(map[*Peer]struct{}),
+		messageQueue: make(chan *Envelope, messageQueueLimit),
+		p2pMsgQueue:  make(chan *Envelope, messageQueueLimit),
+		quit:         make(chan struct{}),
 	}
 
 	whisper.filters = NewFilters(whisper)
@@ -182,48 +177,11 @@ func (w *Whisper) SetMaxMessageSize(size uint32) error {
 
 // SetMinimumPoW sets the minimal PoW required by this node
 func (w *Whisper) SetMinimumPoW(val float64) error {
-	if val < 0.0 {
+	if val <= 0.0 {
 		return fmt.Errorf("invalid PoW: %f", val)
 	}
-
-	w.notifyPeersAboutPowRequirementChange(val)
-
-	go func() {
-		// allow some time before all the peers have processed the notification
-		time.Sleep(time.Duration(w.reactionAllowance) * time.Second)
-		w.settings.Store(minPowIdx, val)
-	}()
-
-	return nil
-}
-
-// SetMinimumPoW sets the minimal PoW in test environment
-func (w *Whisper) SetMinimumPowTest(val float64) {
-	w.notifyPeersAboutPowRequirementChange(val)
 	w.settings.Store(minPowIdx, val)
-}
-
-func (w *Whisper) notifyPeersAboutPowRequirementChange(pow float64) {
-	arr := make([]*Peer, len(w.peers))
-	i := 0
-
-	w.peerMu.Lock()
-	for p := range w.peers {
-		arr[i] = p
-		i++
-	}
-	w.peerMu.Unlock()
-
-	for _, p := range arr {
-		err := p.notifyAboutPowRequirementChange(pow)
-		if err != nil {
-			// allow one retry
-			err = p.notifyAboutPowRequirementChange(pow)
-		}
-		if err != nil {
-			log.Warn("oversized message received", "peer", p.ID(), "error", err)
-		}
-	}
+	return nil
 }
 
 // getPeer retrieves peer by ID
@@ -275,7 +233,7 @@ func (w *Whisper) SendP2PMessage(peerID []byte, envelope *Envelope) error {
 
 // SendP2PDirect sends a peer-to-peer message to a specific peer.
 func (w *Whisper) SendP2PDirect(peer *Peer, envelope *Envelope) error {
-	return p2p.Send(peer.ws, p2pMessageCode, envelope)
+	return p2p.Send(peer.ws, p2pCode, envelope)
 }
 
 // NewKeyPair generates a new cryptographic identity for the client, and injects
@@ -409,9 +367,7 @@ func (w *Whisper) AddSymKeyFromPassword(password string) (string, error) {
 		return "", fmt.Errorf("failed to generate unique ID")
 	}
 
-	// kdf should run no less than 0.1 seconds on an average computer,
-	// because it's an once in a session experience
-	derived := pbkdf2.Key([]byte(password), nil, 65356, aesKeyLength, sha256.New)
+	derived, err := deriveKeyMaterial([]byte(password), EnvelopeVersion)
 	if err != nil {
 		return "", err
 	}
@@ -557,43 +513,20 @@ func (wh *Whisper) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 			log.Warn("unxepected status message received", "peer", p.peer.ID())
 		case messagesCode:
 			// decode the contained envelopes
-			var envelopes []*Envelope
-			if err := packet.Decode(&envelopes); err != nil {
-				log.Warn("failed to decode envelopes, peer will be disconnected", "peer", p.peer.ID(), "err", err)
-				return errors.New("invalid envelopes")
-			}
-
-			trouble := false
-			for _, env := range envelopes {
-				cached, err := wh.add(env)
-				if err != nil {
-					trouble = true
-					log.Error("bad envelope received, peer will be disconnected", "peer", p.peer.ID(), "err", err)
-				}
-				if cached {
-					p.mark(env)
-				}
-			}
-
-			if trouble {
+			var envelope Envelope
+			if err := packet.Decode(&envelope); err != nil {
+				log.Warn("failed to decode envelope, peer will be disconnected", "peer", p.peer.ID(), "err", err)
 				return errors.New("invalid envelope")
 			}
-		case powRequirementCode:
-			s := rlp.NewStream(packet.Payload, uint64(packet.Size))
-			i, err := s.Uint()
+			cached, err := wh.add(&envelope)
 			if err != nil {
-				log.Warn("failed to decode powRequirementCode message, peer will be disconnected", "peer", p.peer.ID(), "err", err)
-				return errors.New("invalid powRequirementCode message")
+				log.Warn("bad envelope received, peer will be disconnected", "peer", p.peer.ID(), "err", err)
+				return errors.New("invalid envelope")
 			}
-			f := math.Float64frombits(i)
-			if math.IsInf(f, 0) || math.IsNaN(f) || f < 0.0 {
-				log.Warn("invalid value in powRequirementCode message, peer will be disconnected", "peer", p.peer.ID(), "err", err)
-				return errors.New("invalid value in powRequirementCode message")
+			if cached {
+				p.mark(&envelope)
 			}
-			p.powRequirement = f
-		case bloomFilterExCode:
-			// to be implemented
-		case p2pMessageCode:
+		case p2pCode:
 			// peer-to-peer message, sent directly to peer bypassing PoW checks, etc.
 			// this message is not supposed to be forwarded to other peers, and
 			// therefore might not satisfy the PoW, expiry and other requirements.
@@ -654,12 +587,13 @@ func (wh *Whisper) add(envelope *Envelope) (bool, error) {
 		return false, fmt.Errorf("huge messages are not allowed [%x]", envelope.Hash())
 	}
 
+	if len(envelope.Version) > 4 {
+		return false, fmt.Errorf("oversized version [%x]", envelope.Hash())
+	}
+
 	if envelope.PoW() < wh.MinPow() {
 		log.Debug("envelope with low PoW dropped", "PoW", envelope.PoW(), "hash", envelope.Hash().Hex())
-		return false, nil // drop envelope without error for now
-
-		// once the status message includes the PoW requirement, an error should be returned here:
-		//return false, fmt.Errorf("envelope with low PoW dropped: PoW=%f, hash=[%v]", envelope.PoW(), envelope.Hash().Hex())
+		return false, nil // drop envelope without error
 	}
 
 	hash := envelope.Hash()
@@ -694,11 +628,16 @@ func (wh *Whisper) add(envelope *Envelope) (bool, error) {
 
 // postEvent queues the message for further processing.
 func (w *Whisper) postEvent(envelope *Envelope, isP2P bool) {
-	if isP2P {
-		w.p2pMsgQueue <- envelope
-	} else {
-		w.checkOverflow()
-		w.messageQueue <- envelope
+	// if the version of incoming message is higher than
+	// currently supported version, we can not decrypt it,
+	// and therefore just ignore this message
+	if envelope.Ver() <= EnvelopeVersion {
+		if isP2P {
+			w.p2pMsgQueue <- envelope
+		} else {
+			w.checkOverflow()
+			w.messageQueue <- envelope
+		}
 	}
 }
 
@@ -882,6 +821,19 @@ func BytesToUintBigEndian(b []byte) (res uint64) {
 		res += uint64(b[i])
 	}
 	return res
+}
+
+// deriveKeyMaterial derives symmetric key material from the key or password.
+// pbkdf2 is used for security, in case people use password instead of randomly generated keys.
+func deriveKeyMaterial(key []byte, version uint64) (derivedKey []byte, err error) {
+	if version == 0 {
+		// kdf should run no less than 0.1 seconds on average compute,
+		// because it's a once in a session experience
+		derivedKey := pbkdf2.Key(key, nil, 65356, aesKeyLength, sha256.New)
+		return derivedKey, nil
+	} else {
+		return nil, unknownVersionError(version)
+	}
 }
 
 // GenerateRandomID generates a random string, which is then returned to be used as a key id
