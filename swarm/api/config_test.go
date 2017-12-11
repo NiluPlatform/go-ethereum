@@ -20,8 +20,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/crypto"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func TestConfig(t *testing.T) {
@@ -36,7 +36,7 @@ func TestConfig(t *testing.T) {
 	one := NewDefaultConfig()
 	two := NewDefaultConfig()
 
-	if equal := reflect.DeepEqual(one, two); !equal {
+	if equal := reflect.DeepEqual(one, two); equal == false {
 		t.Fatal("Two default configs are not equal")
 	}
 

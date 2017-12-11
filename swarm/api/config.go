@@ -22,14 +22,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/contracts/ens"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/node"
-	"github.com/NiluPlatform/go-nilu/swarm/network"
-	"github.com/NiluPlatform/go-nilu/swarm/services/swap"
-	"github.com/NiluPlatform/go-nilu/swarm/storage"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/contracts/ens"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/node"
+	"github.com/ethereum/go-ethereum/swarm/network"
+	"github.com/ethereum/go-ethereum/swarm/services/swap"
+	"github.com/ethereum/go-ethereum/swarm/storage"
 )
 
 const (
@@ -75,7 +75,7 @@ func NewDefaultConfig() (self *Config) {
 		ListenAddr:    DefaultHTTPListenAddr,
 		Port:          DefaultHTTPPort,
 		Path:          node.DefaultDataDir(),
-		EnsApi:        node.DefaultIPCEndpoint("gilu"),
+		EnsApi:        node.DefaultIPCEndpoint("geth"),
 		EnsRoot:       ens.TestNetAddress,
 		NetworkId:     network.NetworkId,
 		SwapEnabled:   false,

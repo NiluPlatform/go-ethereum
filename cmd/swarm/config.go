@@ -27,13 +27,13 @@ import (
 
 	cli "gopkg.in/urfave/cli.v1"
 
-	"github.com/NiluPlatform/go-nilu/cmd/utils"
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/node"
+	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/node"
 	"github.com/naoina/toml"
 
-	bzzapi "github.com/NiluPlatform/go-nilu/swarm/api"
+	bzzapi "github.com/ethereum/go-ethereum/swarm/api"
 )
 
 var (
@@ -83,7 +83,7 @@ var tomlSettings = toml.Config{
 	MissingField: func(rt reflect.Type, field string) error {
 		link := ""
 		if unicode.IsUpper(rune(rt.Name()[0])) && rt.PkgPath() != "main" {
-			link = fmt.Sprintf(", check github.com/NiluPlatform/go-nilu/swarm/api/config.go for available fields")
+			link = fmt.Sprintf(", check github.com/ethereum/go-ethereum/swarm/api/config.go for available fields")
 		}
 		return fmt.Errorf("field '%s' is not defined in %s%s", field, rt.String(), link)
 	},
@@ -267,7 +267,7 @@ func envVarsOverride(currentConfig *bzzapi.Config) (config *bzzapi.Config) {
 	}
 
 	//EnsApi can be set to "", so can't check for empty string, as it is allowed
-	if ensapi, exists := os.LookupEnv(SWARM_ENV_ENS_API); exists {
+	if ensapi, exists := os.LookupEnv(SWARM_ENV_ENS_API); exists == true {
 		currentConfig.EnsApi = ensapi
 	}
 
@@ -315,7 +315,7 @@ func checkDeprecated(ctx *cli.Context) {
 func printConfig(config *bzzapi.Config) string {
 	out, err := tomlSettings.Marshal(&config)
 	if err != nil {
-		return fmt.Sprintf("Something is not right with the configuration: %v", err)
+		return (fmt.Sprintf("Something is not right with the configuration: %v", err))
 	}
 	return string(out)
 }
