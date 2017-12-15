@@ -22,9 +22,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/common/hexutil"
-	"github.com/NiluPlatform/go-nilu/common/math"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 var (
@@ -72,16 +72,6 @@ func TestVerifySignature(t *testing.T) {
 	wrongkey[10]++
 	if VerifySignature(wrongkey, testmsg, sig) {
 		t.Errorf("signature valid with with wrong public key")
-	}
-}
-
-// This test checks that VerifySignature rejects malleable signatures with s > N/2.
-func TestVerifySignatureMalleable(t *testing.T) {
-	sig := hexutil.MustDecode("0x638a54215d80a6713c8d523a6adc4e6e73652d859103a36b700851cb0e61b66b8ebfc1a610c57d732ec6e0a8f06a9a7a28df5051ece514702ff9cdff0b11f454")
-	key := hexutil.MustDecode("0x03ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd3138")
-	msg := hexutil.MustDecode("0xd301ce462d3e639518f482c7f03821fec1e602018630ce621e1e7851c12343a6")
-	if VerifySignature(key, msg, sig) {
-		t.Error("VerifySignature returned true for malleable signature")
 	}
 }
 
