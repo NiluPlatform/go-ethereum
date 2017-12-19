@@ -1,18 +1,18 @@
-// Copyright 2016 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2016 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 /*
 A simple http server interface to Swarm
@@ -35,10 +35,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/swarm/api"
-	"github.com/NiluPlatform/go-nilu/swarm/storage"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/swarm/api"
+	"github.com/ethereum/go-ethereum/swarm/storage"
 	"github.com/rs/cors"
 )
 
@@ -290,12 +290,9 @@ func (s *Server) HandleDelete(w http.ResponseWriter, r *Request) {
 	fmt.Fprint(w, newKey)
 }
 
-// HandleGet handles a GET request to
-// - bzz-raw://<key> and responds with the raw content stored at the
-//   given storage key
-// - bzz-hash://<key> and responds with the hash of the content stored
-//   at the given storage key as a text/plain response
-func (s *Server) HandleGet(w http.ResponseWriter, r *Request) {
+// HandleGetRaw handles a GET request to bzz-raw://<key> and responds with
+// the raw content stored at the given storage key
+func (s *Server) HandleGetRaw(w http.ResponseWriter, r *Request) {
 	key, err := s.api.Resolve(r.uri)
 	if err != nil {
 		s.Error(w, r, fmt.Errorf("error resolving %s: %s", r.uri.Addr, err))
@@ -348,22 +345,15 @@ func (s *Server) HandleGet(w http.ResponseWriter, r *Request) {
 		return
 	}
 
-	switch {
-	case r.uri.Raw():
-		// allow the request to overwrite the content type using a query
-		// parameter
-		contentType := "application/octet-stream"
-		if typ := r.URL.Query().Get("content_type"); typ != "" {
-			contentType = typ
-		}
-		w.Header().Set("Content-Type", contentType)
-
-		http.ServeContent(w, &r.Request, "", time.Now(), reader)
-	case r.uri.Hash():
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, key)
+	// allow the request to overwrite the content type using a query
+	// parameter
+	contentType := "application/octet-stream"
+	if typ := r.URL.Query().Get("content_type"); typ != "" {
+		contentType = typ
 	}
+	w.Header().Set("Content-Type", contentType)
+
+	http.ServeContent(w, &r.Request, "", time.Now(), reader)
 }
 
 // HandleGetFiles handles a GET request to bzz:/<manifest> with an Accept
@@ -629,8 +619,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.HandleDelete(w, req)
 
 	case "GET":
-		if uri.Raw() || uri.Hash() || uri.DeprecatedRaw() {
-			s.HandleGet(w, req)
+		if uri.Raw() || uri.DeprecatedRaw() {
+			s.HandleGetRaw(w, req)
 			return
 		}
 

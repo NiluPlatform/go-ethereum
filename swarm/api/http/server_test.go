@@ -1,18 +1,18 @@
-// Copyright 2017 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2017 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package http_test
 
@@ -26,14 +26,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/swarm/api"
-	swarm "github.com/NiluPlatform/go-nilu/swarm/api/client"
-	"github.com/NiluPlatform/go-nilu/swarm/storage"
-	"github.com/NiluPlatform/go-nilu/swarm/testutil"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/swarm/api"
+	swarm "github.com/ethereum/go-ethereum/swarm/api/client"
+	"github.com/ethereum/go-ethereum/swarm/storage"
+	"github.com/ethereum/go-ethereum/swarm/testutil"
 )
 
-func TestBzzGetPath(t *testing.T) {
+func TestBzzrGetPath(t *testing.T) {
 
 	var err error
 
@@ -100,38 +100,6 @@ func TestBzzGetPath(t *testing.T) {
 			}
 			if !isexpectedfailrequest {
 				t.Fatalf("Response body does not match, expected: %v, got %v", testmanifest[v], string(respbody))
-			}
-		}
-	}
-
-	for k, v := range testrequests {
-		var resp *http.Response
-		var respbody []byte
-
-		url := srv.URL + "/bzz-hash:/"
-		if k[:] != "" {
-			url += common.ToHex(key[0])[2:] + "/" + k[1:]
-		}
-		resp, err = http.Get(url)
-		if err != nil {
-			t.Fatalf("Request failed: %v", err)
-		}
-		defer resp.Body.Close()
-		respbody, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			t.Fatalf("Read request body: %v", err)
-		}
-
-		if string(respbody) != key[v].String() {
-			isexpectedfailrequest := false
-
-			for _, r := range expectedfailrequests {
-				if k[:] == r {
-					isexpectedfailrequest = true
-				}
-			}
-			if !isexpectedfailrequest {
-				t.Fatalf("Response body does not match, expected: %v, got %v", key[v], string(respbody))
 			}
 		}
 	}
@@ -229,13 +197,11 @@ func TestBzzGetPath(t *testing.T) {
 		srv.URL + "/bzz-immutable:/nonhash",
 		srv.URL + "/bzz-raw:/nonhash",
 		srv.URL + "/bzz-list:/nonhash",
-		srv.URL + "/bzz-hash:/nonhash",
 	}
 
 	nonhashresponses := []string{
 		"error resolving name: no DNS to resolve name: &#34;name&#34;",
 		"error resolving nonhash: immutable address not a content hash: &#34;nonhash&#34;",
-		"error resolving nonhash: no DNS to resolve name: &#34;nonhash&#34;",
 		"error resolving nonhash: no DNS to resolve name: &#34;nonhash&#34;",
 		"error resolving nonhash: no DNS to resolve name: &#34;nonhash&#34;",
 	}
