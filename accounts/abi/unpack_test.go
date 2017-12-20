@@ -435,6 +435,29 @@ func TestMultiReturnWithArray(t *testing.T) {
 	}
 }
 
+func TestMultiReturnWithArray(t *testing.T) {
+	const definition = `[{"name" : "multi", "outputs": [{"type": "uint64[3]"}, {"type": "uint64"}]}]`
+	abi, err := JSON(strings.NewReader(definition))
+	if err != nil {
+		t.Fatal(err)
+	}
+	buff := new(bytes.Buffer)
+	buff.Write(common.Hex2Bytes("000000000000000000000000000000000000000000000000000000000000000900000000000000000000000000000000000000000000000000000000000000090000000000000000000000000000000000000000000000000000000000000009"))
+	buff.Write(common.Hex2Bytes("0000000000000000000000000000000000000000000000000000000000000008"))
+
+	ret1, ret1Exp := new([3]uint64), [3]uint64{9, 9, 9}
+	ret2, ret2Exp := new(uint64), uint64(8)
+	if err := abi.Unpack(&[]interface{}{ret1, ret2}, "multi", buff.Bytes()); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(*ret1, ret1Exp) {
+		t.Error("array result", *ret1, "!= Expected", ret1Exp)
+	}
+	if *ret2 != ret2Exp {
+		t.Error("int result", *ret2, "!= Expected", ret2Exp)
+	}
+}
+
 func TestUnmarshal(t *testing.T) {
 	const definition = `[
 	{ "name" : "int", "constant" : false, "outputs": [ { "type": "uint256" } ] },

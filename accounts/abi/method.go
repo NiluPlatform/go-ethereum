@@ -48,16 +48,6 @@ func (method Method) pack(args ...interface{}) ([]byte, error) {
 	// output. This is used for strings and bytes types input.
 	var variableInput []byte
 
-	// input offset is the bytes offset for packed output
-	inputOffset := 0
-	for _, input := range method.Inputs {
-		if input.Type.T == ArrayTy {
-			inputOffset += (32 * input.Type.Size)
-		} else {
-			inputOffset += 32
-		}
-	}
-
 	var ret []byte
 	for i, a := range args {
 		input := method.Inputs[i]
@@ -70,8 +60,7 @@ func (method Method) pack(args ...interface{}) ([]byte, error) {
 		// check for a slice type (string, bytes, slice)
 		if input.Type.requiresLengthPrefix() {
 			// calculate the offset
-			offset := inputOffset + len(variableInput)
-
+			offset := len(method.Inputs)*32 + len(variableInput)
 			// set the offset
 			ret = append(ret, packNum(reflect.ValueOf(offset))...)
 			// Append the packed output to the variable input. The variable input
@@ -86,6 +75,86 @@ func (method Method) pack(args ...interface{}) ([]byte, error) {
 	ret = append(ret, variableInput...)
 
 	return ret, nil
+}
+
+// unpacks a method return tuple into a struct of corresponding go types
+//
+// Unpacking can be done into a struct or a slice/array.
+func (method Method) tupleUnpack(v interface{}, output []byte) error {
+	// make sure the passed value is a pointer
+	valueOf := reflect.ValueOf(v)
+	if reflect.Ptr != valueOf.Kind() {
+		return fmt.Errorf("abi: Unpack(non-pointer %T)", v)
+	}
+
+	var (
+		value = valueOf.Elem()
+		typ   = value.Type()
+	)
+
+	j := 0
+	for i := 0; i < len(method.Outputs); i++ {
+		toUnpack := method.Outputs[i]
+		marshalledValue, err := toGoType((i+j)*32, toUnpack.Type, output)
+		if err != nil {
+			return err
+		}
+		if toUnpack.Type.T == ArrayTy {
+			// combined index ('i' + 'j') need to be adjusted only by size of array, thus
+			// we need to decrement 'j' because 'i' was incremented
+			j += toUnpack.Type.Size - 1
+		}
+		reflectValue := reflect.ValueOf(marshalledValue)
+
+		switch value.Kind() {
+		case reflect.Struct:
+			for j := 0; j < typ.NumField(); j++ {
+				field := typ.Field(j)
+				// TODO read tags: `abi:"fieldName"`
+				if field.Name == strings.ToUpper(method.Outputs[i].Name[:1])+method.Outputs[i].Name[1:] {
+					if err := set(value.Field(j), reflectValue, method.Outputs[i]); err != nil {
+						return err
+					}
+				}
+			}
+		case reflect.Slice, reflect.Array:
+			if value.Len() < i {
+				return fmt.Errorf("abi: insufficient number of arguments for unpack, want %d, got %d", len(method.Outputs), value.Len())
+			}
+			v := value.Index(i)
+			if v.Kind() != reflect.Ptr && v.Kind() != reflect.Interface {
+				return fmt.Errorf("abi: cannot unmarshal %v in to %v", v.Type(), reflectValue.Type())
+			}
+			reflectValue := reflect.ValueOf(marshalledValue)
+			if err := set(v.Elem(), reflectValue, method.Outputs[i]); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("abi: cannot unmarshal tuple in to %v", typ)
+		}
+	}
+	return nil
+}
+
+func (method Method) isTupleReturn() bool { return len(method.Outputs) > 1 }
+
+func (method Method) singleUnpack(v interface{}, output []byte) error {
+	// make sure the passed value is a pointer
+	valueOf := reflect.ValueOf(v)
+	if reflect.Ptr != valueOf.Kind() {
+		return fmt.Errorf("abi: Unpack(non-pointer %T)", v)
+	}
+
+	value := valueOf.Elem()
+
+	marshalledValue, err := toGoType(0, method.Outputs[0].Type, output)
+	if err != nil {
+		return err
+	}
+	if err := set(value, reflect.ValueOf(marshalledValue), method.Outputs[0]); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Sig returns the methods string signature according to the ABI spec.
