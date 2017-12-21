@@ -27,19 +27,19 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/common/hexutil"
-	"github.com/NiluPlatform/go-nilu/core"
-	"github.com/NiluPlatform/go-nilu/core/state"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/core/vm"
-	"github.com/NiluPlatform/go-nilu/eth/tracers"
-	"github.com/NiluPlatform/go-nilu/ethdb"
-	"github.com/NiluPlatform/go-nilu/internal/ethapi"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/rlp"
-	"github.com/NiluPlatform/go-nilu/rpc"
-	"github.com/NiluPlatform/go-nilu/trie"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/tracers"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 const (
@@ -204,7 +204,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 	if err != nil {
 		// If the starting state is missing, allow some number of blocks to be reexecuted
 		reexec := defaultTraceReexec
-		if config != nil && config.Reexec != nil {
+		if config.Reexec != nil {
 			reexec = *config.Reexec
 		}
 		// Find the most recent block that has the state available
@@ -465,7 +465,7 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 		return nil, fmt.Errorf("parent %x not found", block.ParentHash())
 	}
 	reexec := defaultTraceReexec
-	if config != nil && config.Reexec != nil {
+	if config.Reexec != nil {
 		reexec = *config.Reexec
 	}
 	statedb, err := api.computeStateDB(parent, reexec)
@@ -619,7 +619,7 @@ func (api *PrivateDebugAPI) TraceTransaction(ctx context.Context, hash common.Ha
 		return nil, fmt.Errorf("transaction %x not found", hash)
 	}
 	reexec := defaultTraceReexec
-	if config != nil && config.Reexec != nil {
+	if config.Reexec != nil {
 		reexec = *config.Reexec
 	}
 	msg, vmctx, statedb, err := api.computeTxEnv(blockHash, int(index), reexec)
