@@ -20,22 +20,19 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"fmt"
-	mrand "math/rand"
 	"net"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/common/hexutil"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/p2p"
-	"github.com/NiluPlatform/go-nilu/p2p/discover"
-	"github.com/NiluPlatform/go-nilu/p2p/nat"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/p2p/nat"
 )
 
-var keys = []string{
+var keys []string = []string{
 	"d49dcf37238dc8a7aac57dc61b9fee68f0a97f062968978b9fafa7d1033d03a9",
 	"73fd6143c48e80ed3c56ea159fe7494a0b6b393a392227b422f4c3e8f1b54f98",
 	"119dd32adb1daa7a4c7bf77f847fb28730785aa92947edf42fdd997b54de40dc",
@@ -71,8 +68,9 @@ var keys = []string{
 	"7184c1701569e3a4c4d2ddce691edd983b81e42e09196d332e1ae2f1e062cff4",
 }
 
+const NumNodes = 16 // must not exceed the number of keys (32)
+
 type TestData struct {
-	started int64
 	counter [NumNodes]int
 	mutex   sync.RWMutex
 }
@@ -81,32 +79,21 @@ type TestNode struct {
 	shh     *Whisper
 	id      *ecdsa.PrivateKey
 	server  *p2p.Server
-	filerID string
+	filerId string
 }
-
-const NumNodes = 8 // must not exceed the number of keys (32)
 
 var result TestData
 var nodes [NumNodes]*TestNode
-var sharedKey = hexutil.MustDecode("0x03ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31")
-var wrongKey = hexutil.MustDecode("0xf91156714d7ec88d3edc1c652c2181dbb3044e8771c683f3b30d33c12b986b11")
-var sharedTopic = TopicType{0xF, 0x1, 0x2, 0}
-var wrongTopic = TopicType{0, 0, 0, 0}
-var expectedMessage = []byte("per aspera ad astra")
-var unexpectedMessage = []byte("per rectum ad astra")
-var masterBloomFilter []byte
-var masterPow = 0.00000001
-var round = 1
-var debugMode = false
-var prevTime time.Time
-var cntPrev int
+var sharedKey []byte = []byte("some arbitrary data here")
+var sharedTopic TopicType = TopicType{0xF, 0x1, 0x2, 0}
+var expectedMessage []byte = []byte("per rectum ad astra")
 
 func TestSimulation(t *testing.T) {
 	// create a chain of whisper nodes,
 	// installs the filters with shared (predefined) parameters
 	initialize(t)
 
-	// each node sends one random (not decryptable) message
+	// each node sends a number of random (undecryptable) messages
 	for i := 0; i < NumNodes; i++ {
 		sendMsg(t, false, i)
 	}
@@ -117,12 +104,8 @@ func TestSimulation(t *testing.T) {
 	// check if each node have received and decrypted exactly one message
 	checkPropagation(t, true)
 
-	// check if Status message was correctly decoded
-	checkBloomFilterExchange(t)
-	checkPowExchange(t)
-
-	// send new pow and bloom exchange messages
-	resetParams(t)
+	// send protocol-level messages (powRequirementCode) and check the new PoW requirement values
+	powReqExchange(t)
 
 	// node #1 sends one expected (decryptable) message
 	sendMsg(t, true, 1)
@@ -130,68 +113,24 @@ func TestSimulation(t *testing.T) {
 	// check if each node (except node #0) have received and decrypted exactly one message
 	checkPropagation(t, false)
 
-	// check if corresponding protocol-level messages were correctly decoded
-	checkPowExchangeForNodeZero(t)
-	checkBloomFilterExchange(t)
-
 	stopServers()
 }
 
-func resetParams(t *testing.T) {
-	// change pow only for node zero
-	masterPow = 7777777.0
-	nodes[0].shh.SetMinimumPoW(masterPow)
-
-	// change bloom for all nodes
-	masterBloomFilter = TopicToBloom(sharedTopic)
-	for i := 0; i < NumNodes; i++ {
-		nodes[i].shh.SetBloomFilter(masterBloomFilter)
-	}
-
-	round++
-}
-
-func initBloom(t *testing.T) {
-	masterBloomFilter = make([]byte, BloomFilterSize)
-	_, err := mrand.Read(masterBloomFilter)
-	if err != nil {
-		t.Fatalf("rand failed: %s.", err)
-	}
-
-	msgBloom := TopicToBloom(sharedTopic)
-	masterBloomFilter = addBloom(masterBloomFilter, msgBloom)
-	for i := 0; i < 32; i++ {
-		masterBloomFilter[i] = 0xFF
-	}
-
-	if !BloomFilterMatch(masterBloomFilter, msgBloom) {
-		t.Fatalf("bloom mismatch on initBloom.")
-	}
-}
-
 func initialize(t *testing.T) {
-	initBloom(t)
-
 	var err error
 	ip := net.IPv4(127, 0, 0, 1)
 	port0 := 30303
 
 	for i := 0; i < NumNodes; i++ {
 		var node TestNode
-		b := make([]byte, BloomFilterSize)
-		copy(b, masterBloomFilter)
 		node.shh = New(&DefaultConfig)
-		node.shh.SetMinimumPoW(masterPow)
-		node.shh.SetBloomFilter(b)
-		if !bytes.Equal(node.shh.BloomFilter(), masterBloomFilter) {
-			t.Fatalf("bloom mismatch on init.")
-		}
+		node.shh.SetMinimumPowTest(0.00000001)
 		node.shh.Start(nil)
 		topics := make([]TopicType, 0)
 		topics = append(topics, sharedTopic)
 		f := Filter{KeySym: sharedKey}
 		f.Topics = [][]byte{topics[0][:]}
-		node.filerID, err = node.shh.Subscribe(&f)
+		node.filerId, err = node.shh.Subscribe(&f)
 		if err != nil {
 			t.Fatalf("failed to install the filter: %s.", err)
 		}
@@ -204,9 +143,9 @@ func initialize(t *testing.T) {
 		name := common.MakeName("whisper-go", "2.0")
 		var peers []*discover.Node
 		if i > 0 {
-			peerNodeID := nodes[i-1].id
+			peerNodeId := nodes[i-1].id
 			peerPort := uint16(port - 1)
-			peerNode := discover.PubkeyID(&peerNodeID.PublicKey)
+			peerNode := discover.PubkeyID(&peerNodeId.PublicKey)
 			peer := discover.NewNode(peerNode, ip, peerPort, peerPort)
 			peers = append(peers, peer)
 		}
@@ -228,27 +167,22 @@ func initialize(t *testing.T) {
 		nodes[i] = &node
 	}
 
-	for i := 0; i < NumNodes; i++ {
-		go startServer(t, nodes[i].server)
+	for i := 1; i < NumNodes; i++ {
+		go nodes[i].server.Start()
 	}
 
-	waitForServersToStart(t)
-}
-
-func startServer(t *testing.T, s *p2p.Server) {
-	err := s.Start()
+	// we need to wait until the first node actually starts
+	err = nodes[0].server.Start()
 	if err != nil {
 		t.Fatalf("failed to start the fisrt server.")
 	}
-
-	atomic.AddInt64(&result.started, 1)
 }
 
 func stopServers() {
 	for i := 0; i < NumNodes; i++ {
 		n := nodes[i]
 		if n != nil {
-			n.shh.Unsubscribe(n.filerID)
+			n.shh.Unsubscribe(n.filerId)
 			n.shh.Stop()
 			n.server.Stop()
 		}
@@ -260,10 +194,8 @@ func checkPropagation(t *testing.T, includingNodeZero bool) {
 		return
 	}
 
-	prevTime = time.Now()
-	// (cycle * iterations) should not exceed 50 seconds, since TTL=50
-	const cycle = 200 // time in milliseconds
-	const iterations = 250
+	const cycle = 50
+	const iterations = 200
 
 	first := 0
 	if !includingNodeZero {
@@ -272,35 +204,35 @@ func checkPropagation(t *testing.T, includingNodeZero bool) {
 
 	for j := 0; j < iterations; j++ {
 		for i := first; i < NumNodes; i++ {
-			f := nodes[i].shh.GetFilter(nodes[i].filerID)
+			f := nodes[i].shh.GetFilter(nodes[i].filerId)
 			if f == nil {
-				t.Fatalf("failed to get filterId %s from node %d, round %d.", nodes[i].filerID, i, round)
+				t.Fatalf("failed to get filterId %s from node %d.", nodes[i].filerId, i)
 			}
 
 			mail := f.Retrieve()
-			validateMail(t, i, mail)
+			if !validateMail(t, i, mail) {
+				return
+			}
 
 			if isTestComplete() {
-				checkTestStatus()
 				return
 			}
 		}
 
-		checkTestStatus()
 		time.Sleep(cycle * time.Millisecond)
 	}
 
+	t.Fatalf("Test was not complete: timeout %d seconds.", iterations*cycle/1000)
+
 	if !includingNodeZero {
-		f := nodes[0].shh.GetFilter(nodes[0].filerID)
+		f := nodes[0].shh.GetFilter(nodes[0].filerId)
 		if f != nil {
 			t.Fatalf("node zero received a message with low PoW.")
 		}
 	}
-
-	t.Fatalf("Test was not complete (%d round): timeout %d seconds. nodes=%v", round, iterations*cycle/1000, nodes)
 }
 
-func validateMail(t *testing.T, index int, mail []*ReceivedMessage) {
+func validateMail(t *testing.T, index int, mail []*ReceivedMessage) bool {
 	var cnt int
 	for _, m := range mail {
 		if bytes.Equal(m.Payload, expectedMessage) {
@@ -310,13 +242,14 @@ func validateMail(t *testing.T, index int, mail []*ReceivedMessage) {
 
 	if cnt == 0 {
 		// no messages received yet: nothing is wrong
-		return
+		return true
 	}
 	if cnt > 1 {
 		t.Fatalf("node %d received %d.", index, cnt)
+		return false
 	}
 
-	if cnt == 1 {
+	if cnt > 0 {
 		result.mutex.Lock()
 		defer result.mutex.Unlock()
 		result.counter[index] += cnt
@@ -324,28 +257,7 @@ func validateMail(t *testing.T, index int, mail []*ReceivedMessage) {
 			t.Fatalf("node %d accumulated %d.", index, result.counter[index])
 		}
 	}
-}
-
-func checkTestStatus() {
-	var cnt int
-	var arr [NumNodes]int
-
-	for i := 0; i < NumNodes; i++ {
-		arr[i] = nodes[i].server.PeerCount()
-		envelopes := nodes[i].shh.Envelopes()
-		if len(envelopes) >= NumNodes {
-			cnt++
-		}
-	}
-
-	if debugMode {
-		if cntPrev != cnt {
-			fmt.Printf(" %v \t number of nodes that have received all msgs: %d, number of peers per node: %v \n",
-				time.Since(prevTime), cnt, arr)
-			prevTime = time.Now()
-			cntPrev = cnt
-		}
-	}
+	return true
 }
 
 func isTestComplete() bool {
@@ -360,7 +272,7 @@ func isTestComplete() bool {
 
 	for i := 0; i < NumNodes; i++ {
 		envelopes := nodes[i].shh.Envelopes()
-		if len(envelopes) < NumNodes+1 {
+		if len(envelopes) < 2 {
 			return false
 		}
 	}
@@ -375,10 +287,9 @@ func sendMsg(t *testing.T, expected bool, id int) {
 
 	opt := MessageParams{KeySym: sharedKey, Topic: sharedTopic, Payload: expectedMessage, PoW: 0.00000001, WorkTime: 1}
 	if !expected {
-		opt.KeySym = wrongKey
-		opt.Topic = wrongTopic
-		opt.Payload = unexpectedMessage
-		opt.Payload[0] = byte(id)
+		opt.KeySym[0]++
+		opt.Topic[0]++
+		opt.Payload = opt.Payload[1:]
 	}
 
 	msg, err := NewSentMessage(&opt)
@@ -421,94 +332,34 @@ func TestPeerBasic(t *testing.T) {
 	}
 }
 
-func checkPowExchangeForNodeZero(t *testing.T) {
-	const iterations = 200
-	for j := 0; j < iterations; j++ {
-		lastCycle := (j == iterations-1)
-		ok := checkPowExchangeForNodeZeroOnce(t, lastCycle)
-		if ok {
-			break
+func powReqExchange(t *testing.T) {
+	for i, node := range nodes {
+		for peer := range node.shh.peers {
+			if peer.powRequirement > 1000.0 {
+				t.Fatalf("node %d: one of the peers' pow requirement is too big (%f).", i, peer.powRequirement)
+			}
 		}
-		time.Sleep(50 * time.Millisecond)
 	}
-}
 
-func checkPowExchangeForNodeZeroOnce(t *testing.T, mustPass bool) bool {
+	const pow float64 = 7777777.0
+	nodes[0].shh.SetMinimumPoW(pow)
+
+	// wait until all the messages are delivered
+	time.Sleep(64 * time.Millisecond)
+
 	cnt := 0
 	for i, node := range nodes {
 		for peer := range node.shh.peers {
 			if peer.peer.ID() == discover.PubkeyID(&nodes[0].id.PublicKey) {
 				cnt++
-				if peer.powRequirement != masterPow {
-					if mustPass {
-						t.Fatalf("node %d: failed to set the new pow requirement for node zero.", i)
-					} else {
-						return false
-					}
+				if peer.powRequirement != pow {
+					t.Fatalf("node %d: failed to set the new pow requirement.", i)
 				}
 			}
 		}
 	}
+
 	if cnt == 0 {
-		t.Fatalf("looking for node zero: no matching peers found.")
+		t.Fatalf("no matching peers found.")
 	}
-	return true
-}
-
-func checkPowExchange(t *testing.T) {
-	for i, node := range nodes {
-		for peer := range node.shh.peers {
-			if peer.peer.ID() != discover.PubkeyID(&nodes[0].id.PublicKey) {
-				if peer.powRequirement != masterPow {
-					t.Fatalf("node %d: failed to exchange pow requirement in round %d; expected %f, got %f",
-						i, round, masterPow, peer.powRequirement)
-				}
-			}
-		}
-	}
-}
-
-func checkBloomFilterExchangeOnce(t *testing.T, mustPass bool) bool {
-	for i, node := range nodes {
-		for peer := range node.shh.peers {
-			peer.bloomMu.Lock()
-			equals := bytes.Equal(peer.bloomFilter, masterBloomFilter)
-			peer.bloomMu.Unlock()
-			if !equals {
-				if mustPass {
-					t.Fatalf("node %d: failed to exchange bloom filter requirement in round %d. \n%x expected \n%x got",
-						i, round, masterBloomFilter, peer.bloomFilter)
-				} else {
-					return false
-				}
-			}
-		}
-	}
-
-	return true
-}
-
-func checkBloomFilterExchange(t *testing.T) {
-	const iterations = 200
-	for j := 0; j < iterations; j++ {
-		lastCycle := (j == iterations-1)
-		ok := checkBloomFilterExchangeOnce(t, lastCycle)
-		if ok {
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-}
-
-func waitForServersToStart(t *testing.T) {
-	const iterations = 200
-	var started int64
-	for j := 0; j < iterations; j++ {
-		time.Sleep(50 * time.Millisecond)
-		started = atomic.LoadInt64(&result.started)
-		if started == NumNodes {
-			return
-		}
-	}
-	t.Fatalf("Failed to start all the servers, running: %d", started)
 }
