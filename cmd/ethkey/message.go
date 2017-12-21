@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/NiluPlatform/go-nilu/accounts/keystore"
-	"github.com/NiluPlatform/go-nilu/cmd/utils"
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/crypto"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"gopkg.in/urfave/cli.v1"
 )
 
