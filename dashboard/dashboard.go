@@ -16,11 +16,10 @@
 
 package dashboard
 
-//go:generate npm --prefix ./assets install
 //go:generate ./assets/node_modules/.bin/webpack --config ./assets/webpack.config.js --context ./assets
 //go:generate go-bindata -nometadata -o assets.go -prefix assets -nocompress -pkg dashboard assets/public/...
-//go:generate sh -c "sed 's#var _public#//nolint:misspell\\\n&#' assets.go > assets.go.tmp && mv assets.go.tmp assets.go"
-//go:generate gofmt -w -s assets.go
+//go:generate gofmt -s -w assets.go
+//go:generate sed -i "s#var _public#//nolint:misspell\\n&#" assets.go
 
 import (
 	"fmt"
@@ -32,9 +31,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/p2p"
-	"github.com/NiluPlatform/go-nilu/rpc"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/rcrowley/go-metrics"
 	"golang.org/x/net/websocket"
 )
