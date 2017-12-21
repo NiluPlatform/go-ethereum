@@ -1,23 +1,22 @@
-// Copyright 2015 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2015 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package abi
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -51,25 +50,25 @@ func JSON(reader io.Reader) (ABI, error) {
 // methods string signature. (signature = baz(uint32,string32))
 func (abi ABI) Pack(name string, args ...interface{}) ([]byte, error) {
 	// Fetch the ABI of the requested method
+	var method Method
+
 	if name == "" {
-		// constructor
-		arguments, err := abi.Constructor.Inputs.Pack(args...)
-		if err != nil {
-			return nil, err
+		method = abi.Constructor
+	} else {
+		m, exist := abi.Methods[name]
+		if !exist {
+			return nil, fmt.Errorf("method '%s' not found", name)
 		}
-		return arguments, nil
-
+		method = m
 	}
-	method, exist := abi.Methods[name]
-	if !exist {
-		return nil, fmt.Errorf("method '%s' not found", name)
-	}
-
-	arguments, err := method.Inputs.Pack(args...)
+	arguments, err := method.pack(args...)
 	if err != nil {
 		return nil, err
 	}
 	// Pack up the method ID too if not a constructor and return
+	if name == "" {
+		return arguments, nil
+	}
 	return append(method.Id(), arguments...), nil
 }
 
@@ -78,20 +77,28 @@ func (abi ABI) Unpack(v interface{}, name string, output []byte) (err error) {
 	if len(output) == 0 {
 		return fmt.Errorf("abi: unmarshalling empty output")
 	}
+
 	// since there can't be naming collisions with contracts and events,
 	// we need to decide whether we're calling a method or an event
+	var unpack unpacker
 	if method, ok := abi.Methods[name]; ok {
 		if len(output)%32 != 0 {
 			return fmt.Errorf("abi: improperly formatted output")
 		}
-		return method.Outputs.Unpack(v, output)
+		unpack = method
 	} else if event, ok := abi.Events[name]; ok {
-		return event.Inputs.Unpack(v, output)
+		unpack = event
+	} else {
+		return fmt.Errorf("abi: could not locate named method or event.")
 	}
-	return fmt.Errorf("abi: could not locate named method or event")
+
+	// requires a struct to unpack into for a tuple return...
+	if unpack.isTupleReturn() {
+		return unpack.tupleUnpack(v, output)
+	}
+	return unpack.singleUnpack(v, output)
 }
 
-// UnmarshalJSON implements json.Unmarshaler interface
 func (abi *ABI) UnmarshalJSON(data []byte) error {
 	var fields []struct {
 		Type      string
@@ -132,16 +139,5 @@ func (abi *ABI) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	return nil
-}
-
-// MethodById looks up a method by the 4-byte id
-// returns nil if none found
-func (abi *ABI) MethodById(sigdata []byte) *Method {
-	for _, method := range abi.Methods {
-		if bytes.Equal(method.Id(), sigdata[:4]) {
-			return &method
-		}
-	}
 	return nil
 }
