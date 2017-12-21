@@ -1,18 +1,18 @@
-// Copyright 2015 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2015 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package params
 
@@ -20,10 +20,14 @@ package params
 // the main Ethereum network.
 var MainnetBootnodes = []string{
 	// Ethereum Foundation Go Bootnodes
-	"enode://075aa1d81891b410b873d7aa33d20e44cc701daee0dc57eef3995a801a27a0004eccb3e90ba4c04717858284e7a0b27998dabebcf6b708e0c2668f241d0b7d45@164.132.141.202:30303",
-	"enode://ab52728a722fd4b0560caee3d6fcd341812309476f1fe95700d83e8f64069aed5a74e5f25fddcaeec60ccecea4e3e8cde9c09353f791a8c670530fca5c2ce9ff@209.250.234.227:30303",
-	"enode://c18dbf793b646bbd1d94f834eb2fc1fa9385bf0b18f7b3149497c187667c135a21aa090eb7f7049ccb918ee24c8b21d69ca3720f38f23f2a67cff40ad3a0a120@45.77.177.233:30303",
-	"enode://2aaaf66b5b4f2632780bc2160efaa4e0c3c8c5735d5f0cafcea96c48b5017b74efc7a68ba44b4d4a95bed46a794eba4bec73d4620d11f4cc93f7d88ca5518340@144.202.1.133:30303",
+	"enode://a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c@52.16.188.185:30303", // IE
+	"enode://3f1d12044546b76342d59d4a05532c14b85aa669704bfe1f864fe079415aa2c02d743e03218e57a33fb94523adb54032871a6c51b2cc5514cb7c7e35b3ed0a99@13.93.211.84:30303",  // US-WEST
+	"enode://78de8a0916848093c73790ead81d1928bec737d565119932b98c6b100d944b7a95e94f847f689fc723399d2e31129d182f7ef3863f2b4c820abbf3ab2722344d@191.235.84.50:30303", // BR
+	"enode://158f8aab45f6d19c6cbf4a089c2670541a8da11978a2f90dbf6a502a4a3bab80d288afdbeb7ec0ef6d92de563767f3b1ea9e8e334ca711e9f8e2df5a0385e8e6@13.75.154.138:30303", // AU
+	"enode://1118980bf48b0a3640bdba04e0fe78b1add18e1cd99bf22d53daac1fd9972ad650df52176e7c7d89d1114cfef2bc23a2959aa54998a46afcf7d91809f0855082@52.74.57.123:30303",  // SG
+
+	// Ethereum Foundation C++ Bootnodes
+	"enode://979b7fa28feeb35a4741660a16076f1943202cb72b6af70d327f053e248bab9ba81760f39d0701ef1d8f89cc1fbd2cacba0710a12cd5314d5e0c9021aa3637f9@5.1.83.226:30303", // DE
 }
 
 // TestnetBootnodes are the enode URLs of the P2P bootstrap nodes running on the
