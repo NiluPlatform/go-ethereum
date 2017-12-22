@@ -23,18 +23,18 @@ import (
 	"os"
 	"testing"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/consensus/ethash"
-	"github.com/NiluPlatform/go-nilu/core"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/ethdb"
-	"github.com/NiluPlatform/go-nilu/event"
-	"github.com/NiluPlatform/go-nilu/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 func makeReceipt(addr common.Address) *types.Receipt {
-	receipt := types.NewReceipt(nil, false, 0)
+	receipt := types.NewReceipt(nil, false, new(big.Int))
 	receipt.Logs = []*types.Log{
 		{Address: addr},
 	}
@@ -136,7 +136,7 @@ func TestFilters(t *testing.T) {
 	chain, receipts := core.GenerateChain(params.TestChainConfig, genesis, ethash.NewFaker(), db, 1000, func(i int, gen *core.BlockGen) {
 		switch i {
 		case 1:
-			receipt := types.NewReceipt(nil, false, 0)
+			receipt := types.NewReceipt(nil, false, new(big.Int))
 			receipt.Logs = []*types.Log{
 				{
 					Address: addr,
@@ -145,7 +145,7 @@ func TestFilters(t *testing.T) {
 			}
 			gen.AddUncheckedReceipt(receipt)
 		case 2:
-			receipt := types.NewReceipt(nil, false, 0)
+			receipt := types.NewReceipt(nil, false, new(big.Int))
 			receipt.Logs = []*types.Log{
 				{
 					Address: addr,
@@ -154,7 +154,7 @@ func TestFilters(t *testing.T) {
 			}
 			gen.AddUncheckedReceipt(receipt)
 		case 998:
-			receipt := types.NewReceipt(nil, false, 0)
+			receipt := types.NewReceipt(nil, false, new(big.Int))
 			receipt.Logs = []*types.Log{
 				{
 					Address: addr,
@@ -163,7 +163,7 @@ func TestFilters(t *testing.T) {
 			}
 			gen.AddUncheckedReceipt(receipt)
 		case 999:
-			receipt := types.NewReceipt(nil, false, 0)
+			receipt := types.NewReceipt(nil, false, new(big.Int))
 			receipt.Logs = []*types.Log{
 				{
 					Address: addr,

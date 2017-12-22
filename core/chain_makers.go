@@ -20,14 +20,14 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/consensus"
-	"github.com/NiluPlatform/go-nilu/consensus/misc"
-	"github.com/NiluPlatform/go-nilu/core/state"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/core/vm"
-	"github.com/NiluPlatform/go-nilu/ethdb"
-	"github.com/NiluPlatform/go-nilu/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/consensus/misc"
+	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 // So we can deterministically seed different blockchains
@@ -86,7 +86,7 @@ func (b *BlockGen) AddTx(tx *types.Transaction) {
 		b.SetCoinbase(common.Address{})
 	}
 	b.statedb.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
-	receipt, _, err := ApplyTransaction(b.config, nil, &b.header.Coinbase, b.gasPool, b.statedb, b.header, tx, &b.header.GasUsed, vm.Config{})
+	receipt, _, err := ApplyTransaction(b.config, nil, &b.header.Coinbase, b.gasPool, b.statedb, b.header, tx, b.header.GasUsed, vm.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -232,6 +232,7 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 			UncleHash:  parent.UncleHash(),
 		}),
 		GasLimit: CalcGasLimit(parent),
+		GasUsed:  new(big.Int),
 		Number:   new(big.Int).Add(parent.Number(), common.Big1),
 		Time:     time,
 	}

@@ -24,13 +24,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/consensus/ethash"
-	"github.com/NiluPlatform/go-nilu/core"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/ethdb"
-	"github.com/NiluPlatform/go-nilu/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 var (
@@ -52,7 +52,7 @@ func makeChain(n int, seed byte, parent *types.Block) ([]common.Hash, map[common
 		// If the block number is multiple of 3, send a bonus transaction to the miner
 		if parent == genesis && i%3 == 0 {
 			signer := types.MakeSigner(params.TestChainConfig, block.Number())
-			tx, err := types.SignTx(types.NewTransaction(block.TxNonce(testAddress), common.Address{seed}, big.NewInt(1000), params.TxGas, nil, nil), signer, testKey)
+			tx, err := types.SignTx(types.NewTransaction(block.TxNonce(testAddress), common.Address{seed}, big.NewInt(1000), new(big.Int).SetUint64(params.TxGas), nil, nil), signer, testKey)
 			if err != nil {
 				panic(err)
 			}

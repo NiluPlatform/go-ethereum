@@ -1,18 +1,18 @@
-// Copyright 2016 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2016 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package les
 
@@ -23,18 +23,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/consensus/ethash"
-	"github.com/NiluPlatform/go-nilu/core"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/eth/downloader"
-	"github.com/NiluPlatform/go-nilu/ethdb"
-	"github.com/NiluPlatform/go-nilu/light"
-	"github.com/NiluPlatform/go-nilu/p2p"
-	"github.com/NiluPlatform/go-nilu/params"
-	"github.com/NiluPlatform/go-nilu/rlp"
-	"github.com/NiluPlatform/go-nilu/trie"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/eth/downloader"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/light"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 func expectResponse(r p2p.MsgReader, msgcode, reqID, bv uint64, data interface{}) error {
@@ -443,16 +443,16 @@ func TestTransactionStatusLes2(t *testing.T) {
 	signer := types.HomesteadSigner{}
 
 	// test error status by sending an underpriced transaction
-	tx0, _ := types.SignTx(types.NewTransaction(0, acc1Addr, big.NewInt(10000), params.TxGas, nil, nil), signer, testBankKey)
+	tx0, _ := types.SignTx(types.NewTransaction(0, acc1Addr, big.NewInt(10000), bigTxGas, nil, nil), signer, testBankKey)
 	test(tx0, true, txStatus{Status: core.TxStatusUnknown, Error: core.ErrUnderpriced})
 
-	tx1, _ := types.SignTx(types.NewTransaction(0, acc1Addr, big.NewInt(10000), params.TxGas, big.NewInt(100000000000), nil), signer, testBankKey)
+	tx1, _ := types.SignTx(types.NewTransaction(0, acc1Addr, big.NewInt(10000), bigTxGas, big.NewInt(100000000000), nil), signer, testBankKey)
 	test(tx1, false, txStatus{Status: core.TxStatusUnknown}) // query before sending, should be unknown
 	test(tx1, true, txStatus{Status: core.TxStatusPending})  // send valid processable tx, should return pending
 	test(tx1, true, txStatus{Status: core.TxStatusPending})  // adding it again should not return an error
 
-	tx2, _ := types.SignTx(types.NewTransaction(1, acc1Addr, big.NewInt(10000), params.TxGas, big.NewInt(100000000000), nil), signer, testBankKey)
-	tx3, _ := types.SignTx(types.NewTransaction(2, acc1Addr, big.NewInt(10000), params.TxGas, big.NewInt(100000000000), nil), signer, testBankKey)
+	tx2, _ := types.SignTx(types.NewTransaction(1, acc1Addr, big.NewInt(10000), bigTxGas, big.NewInt(100000000000), nil), signer, testBankKey)
+	tx3, _ := types.SignTx(types.NewTransaction(2, acc1Addr, big.NewInt(10000), bigTxGas, big.NewInt(100000000000), nil), signer, testBankKey)
 	// send transactions in the wrong order, tx3 should be queued
 	test(tx3, true, txStatus{Status: core.TxStatusQueued})
 	test(tx2, true, txStatus{Status: core.TxStatusPending})
