@@ -721,7 +721,7 @@ func TestABI_MethodById(t *testing.T) {
 	}
 	for name, m := range abi.Methods {
 		a := fmt.Sprintf("%v", m)
-		m2,err := abi.MethodById(m.Id())
+		m2, err := abi.MethodById(m.Id())
 		if err != nil {
 			t.Fatal(err)
 		}
