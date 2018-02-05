@@ -18,20 +18,22 @@ package light
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/consensus"
-	"github.com/NiluPlatform/go-nilu/core"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/ethdb"
-	"github.com/NiluPlatform/go-nilu/event"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/params"
-	"github.com/NiluPlatform/go-nilu/rlp"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/hashicorp/golang-lru"
 )
 
@@ -210,6 +212,11 @@ func (bc *LightChain) Engine() consensus.Engine { return bc.engine }
 // Genesis returns the genesis block
 func (bc *LightChain) Genesis() *types.Block {
 	return bc.genesisBlock
+}
+
+// State returns a new mutable state based on the current HEAD block.
+func (bc *LightChain) State() (*state.StateDB, error) {
+	return nil, errors.New("not implemented, needs client/server interface split")
 }
 
 // GetBody retrieves a block body (transactions and uncles) from the database

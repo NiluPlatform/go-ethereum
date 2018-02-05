@@ -1,30 +1,32 @@
-// Copyright 2015 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2015 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package light
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/core/state"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/trie"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 func NewState(ctx context.Context, head *types.Header, odr OdrBackend) *state.StateDB {
@@ -83,6 +85,10 @@ func (db *odrDatabase) ContractCodeSize(addrHash, codeHash common.Hash) (int, er
 	return len(code), err
 }
 
+func (db *odrDatabase) TrieDB() *trie.Database {
+	return nil
+}
+
 type odrTrie struct {
 	db   *odrDatabase
 	id   *TrieID
@@ -113,11 +119,11 @@ func (t *odrTrie) TryDelete(key []byte) error {
 	})
 }
 
-func (t *odrTrie) CommitTo(db trie.DatabaseWriter) (common.Hash, error) {
+func (t *odrTrie) Commit(onleaf trie.LeafCallback) (common.Hash, error) {
 	if t.trie == nil {
 		return t.id.Root, nil
 	}
-	return t.trie.CommitTo(db)
+	return t.trie.Commit(onleaf)
 }
 
 func (t *odrTrie) Hash() common.Hash {
@@ -135,13 +141,17 @@ func (t *odrTrie) GetKey(sha []byte) []byte {
 	return nil
 }
 
+func (t *odrTrie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {
+	return errors.New("not implemented, needs client/server interface split")
+}
+
 // do tries and retries to execute a function until it returns with no error or
 // an error type other than MissingNodeError
 func (t *odrTrie) do(key []byte, fn func() error) error {
 	for {
 		var err error
 		if t.trie == nil {
-			t.trie, err = trie.New(t.id.Root, t.db.backend.Database())
+			t.trie, err = trie.New(t.id.Root, trie.NewDatabase(t.db.backend.Database()))
 		}
 		if err == nil {
 			err = fn()
@@ -167,7 +177,7 @@ func newNodeIterator(t *odrTrie, startkey []byte) trie.NodeIterator {
 	// Open the actual non-ODR trie if that hasn't happened yet.
 	if t.trie == nil {
 		it.do(func() error {
-			t, err := trie.New(t.id.Root, t.db.backend.Database())
+			t, err := trie.New(t.id.Root, trie.NewDatabase(t.db.backend.Database()))
 			if err == nil {
 				it.t.trie = t
 			}
