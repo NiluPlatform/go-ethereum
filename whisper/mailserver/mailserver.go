@@ -21,12 +21,12 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/NiluPlatform/go-nilu/cmd/utils"
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/rlp"
-	whisper "github.com/NiluPlatform/go-nilu/whisper/whisperv5"
+	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
+	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
