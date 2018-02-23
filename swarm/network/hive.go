@@ -1,18 +1,18 @@
-// Copyright 2016 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2016 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package network
 
@@ -22,12 +22,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/p2p/discover"
-	"github.com/NiluPlatform/go-nilu/p2p/netutil"
-	"github.com/NiluPlatform/go-nilu/swarm/network/kademlia"
-	"github.com/NiluPlatform/go-nilu/swarm/storage"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/p2p/netutil"
+	"github.com/ethereum/go-ethereum/swarm/network/kademlia"
+	"github.com/ethereum/go-ethereum/swarm/storage"
 )
 
 // Hive is the logistic manager of the swarm
@@ -38,6 +39,12 @@ import (
 // for db storage and filtering
 // connections and disconnections are reported and relayed
 // to keep the nodetable uptodate
+
+var (
+	peersNumGauge     = metrics.NewRegisteredGauge("network.peers.num", nil)
+	addPeerCounter    = metrics.NewRegisteredCounter("network.addpeer.count", nil)
+	removePeerCounter = metrics.NewRegisteredCounter("network.removepeer.count", nil)
+)
 
 type Hive struct {
 	listenAddr   func() string
@@ -192,6 +199,7 @@ func (self *Hive) Start(id discover.NodeID, listenAddr func() string, connectPee
 func (self *Hive) keepAlive() {
 	alarm := time.NewTicker(time.Duration(self.callInterval)).C
 	for {
+		peersNumGauge.Update(int64(self.kad.Count()))
 		select {
 		case <-alarm:
 			if self.kad.DBCount() > 0 {
@@ -223,6 +231,7 @@ func (self *Hive) Stop() error {
 
 // called at the end of a successful protocol handshake
 func (self *Hive) addPeer(p *peer) error {
+	addPeerCounter.Inc(1)
 	defer func() {
 		select {
 		case self.more <- true:
@@ -247,6 +256,7 @@ func (self *Hive) addPeer(p *peer) error {
 
 // called after peer disconnected
 func (self *Hive) removePeer(p *peer) {
+	removePeerCounter.Inc(1)
 	log.Debug(fmt.Sprintf("bee %v removed", p))
 	self.kad.Off(p, saveSync)
 	select {

@@ -1,18 +1,18 @@
-// Copyright 2017 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2017 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 /*
 Show nicely (but simple) formatted HTML error pages (or respond with JSON
@@ -28,12 +28,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/swarm/api"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/ethereum/go-ethereum/swarm/api"
 )
 
 //templateMap holds a mapping of an HTTP error code to a template
 var templateMap map[int]*template.Template
+
+//metrics variables
+var (
+	htmlCounter = metrics.NewRegisteredCounter("api.http.errorpage.html.count", nil)
+	jsonCounter = metrics.NewRegisteredCounter("api.http.errorpage.json.count", nil)
+)
 
 //parameters needed for formatting the correct HTML page
 type ErrorParams struct {
@@ -132,6 +139,7 @@ func respond(w http.ResponseWriter, r *http.Request, params *ErrorParams) {
 
 //return a HTML page
 func respondHtml(w http.ResponseWriter, params *ErrorParams) {
+	htmlCounter.Inc(1)
 	err := params.template.Execute(w, params)
 	if err != nil {
 		log.Error(err.Error())
@@ -140,6 +148,7 @@ func respondHtml(w http.ResponseWriter, params *ErrorParams) {
 
 //return JSON
 func respondJson(w http.ResponseWriter, params *ErrorParams) {
+	jsonCounter.Inc(1)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(params)
 }
