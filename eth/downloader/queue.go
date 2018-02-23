@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
-	"github.com/NiluPlatform/go-nilu/core/types"
-	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/rcrowley/go-metrics"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/metrics"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
 
