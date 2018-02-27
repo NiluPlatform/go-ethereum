@@ -36,6 +36,9 @@ profile.cov
 *.ipr
 *.iws
 
+# VS Code
+.vscode
+
 # dashboard
 /dashboard/assets/flow-typed
 /dashboard/assets/node_modules
