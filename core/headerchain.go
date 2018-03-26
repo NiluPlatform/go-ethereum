@@ -23,6 +23,7 @@ import (
 	"math"
 	"math/big"
 	mrand "math/rand"
+	"sync/atomic"
 	"time"
 
 	"github.com/NiluPlatform/go-nilu/common"
@@ -32,7 +33,6 @@ import (
 	"github.com/NiluPlatform/go-nilu/log"
 	"github.com/NiluPlatform/go-nilu/params"
 	"github.com/hashicorp/golang-lru"
-	"sync/atomic"
 )
 
 const (
