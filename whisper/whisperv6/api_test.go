@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/ethereum/go-ethereum/common"
 	set "gopkg.in/fatih/set.v0"
 )
 
