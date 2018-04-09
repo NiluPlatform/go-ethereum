@@ -14,7 +14,7 @@ ethdir="$workspace/src/github.com/NiluPlatform"
 if [ ! -L "$ethdir/go-nilu" ]; then
     mkdir -p "$ethdir"
     cd "$ethdir"
-    ln -s ../../../../../. go-ethereum
+    ln -s ../../../../../. go-nilu
     cd "$root"
 fi
 
