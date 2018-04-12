@@ -255,12 +255,12 @@ var isOldGethResource = map[string]bool{
 
 // resolvePath resolves path in the instance directory.
 func (c *Config) resolvePath(path string) string {
-	//logger := log.New("config", path)
-	//logger.Info("path: " + path)
+	logger := log.New("config", path)
+	logger.Info("path: " + path)
 	if filepath.IsAbs(path) {
 		return path
 	}
-	//logger.Info("path: " + c.DataDir)
+	logger.Info("path: " + c.DataDir)
 	if c.DataDir == "" {
 		return ""
 	}

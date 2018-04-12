@@ -1,0 +1,1 @@
+parity ui --ui-port 8100 --rpc --rpcport 7545 --chain nilu.json --network-id 42 --reserved-peers parity-peers.txt --reserved-only -ldiscovery,network,chain=trace --jsonrpc-apis web3,eth,pubsub,net,parity,parity_pubsub,traces,rpc,secretstore

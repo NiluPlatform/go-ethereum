@@ -1,0 +1,116 @@
+[parity]
+mode = "last"
+mode_timeout = 300
+mode_alarm = 3600
+auto_update = "none"
+release_track = "current"
+public_node = false
+no_download = false
+no_consensus = false
+no_persistent_txqueue = false
+
+chain = "./nilu.json"
+base_path = "$HOME/.local/share/io.parity.ethereum"
+db_path = "$HOME/.local/share/io.parity.ethereum/chains"
+keys_path = "$HOME/.local/share/io.parity.ethereum/keys"
+identity = ""
+light = false
+
+
+[ui]
+force = true
+disable = false
+port = 8180
+interface = "127.0.0.1"
+path = "$HOME/.local/share/io.parity.ethereum/signer"
+
+[network]
+port = 20303
+min_peers = 25
+max_peers = 50
+nat = "any"
+id = 42
+bootnodes = [
+	"enode://075aa1d81891b410b873d7aa33d20e44cc701daee0dc57eef3995a801a27a0004eccb3e90ba4c04717858284e7a0b27998dabebcf6b708e0c2668f241d0b7d45@164.132.141.202:30303",
+	"enode://ab52728a722fd4b0560caee3d6fcd341812309476f1fe95700d83e8f64069aed5a74e5f25fddcaeec60ccecea4e3e8cde9c09353f791a8c670530fca5c2ce9ff@209.250.234.227:30303",
+	"enode://c18dbf793b646bbd1d94f834eb2fc1fa9385bf0b18f7b3149497c187667c135a21aa090eb7f7049ccb918ee24c8b21d69ca3720f38f23f2a67cff40ad3a0a120@45.77.177.233:30303",
+	"enode://2aaaf66b5b4f2632780bc2160efaa4e0c3c8c5735d5f0cafcea96c48b5017b74efc7a68ba44b4d4a95bed46a794eba4bec73d4620d11f4cc93f7d88ca5518340@144.202.1.133:30303",
+]
+discovery = true
+warp = true
+allow_ips = "all"
+snapshot_peers = 1
+max_pending_peers = 64
+no_serve_light = false
+
+reserved_only = true
+reserved_peers = "./parity-peers.txt"
+
+[rpc]
+disable = false
+port = 7545
+interface = "local"
+cors = "null"
+apis = ["web3", "eth", "net", "parity", "traces", "rpc", "secretstore"]
+hosts = ["none"]
+
+[websockets]
+disable = false
+port = 7546
+interface = "local"
+origins = ["none"]
+apis = ["web3", "eth", "net", "parity", "traces", "rpc", "secretstore"]
+hosts = ["none"]
+
+[ipc]
+disable = false
+path = "$HOME/.local/share/io.parity.ethereum/jsonrpc.ipc"
+apis = ["web3", "eth", "net", "parity", "parity_accounts", "personal", "traces", "rpc", "secretstore"]
+
+[dapps]
+disable = false
+path = "$HOME/.local/share/io.parity.ethereum/dapps"
+
+[secretstore]
+disable = false
+nodes = []
+http_interface = "local"
+http_port = 7082
+interface = "local"
+port = 7083
+path = "$HOME/.local/share/io.parity.ethereum/secretstore"
+
+[ipfs]
+enable = false
+port = 5001
+interface = "local"
+cors = "null"
+hosts = ["none"]
+
+
+[footprint]
+tracing = "auto"
+pruning = "auto"
+pruning_history = 64
+pruning_memory = 500
+cache_size_db = 64
+cache_size_blocks = 8
+cache_size_queue = 50
+cache_size_state = 25
+cache_size = 128 # Overrides above caches with total size
+fast_and_loose = false
+db_compaction = "ssd"
+fat_db = "auto"
+scale_verifiers = true
+num_verifiers = 6
+
+[snapshots]
+disable_periodic = false
+
+[vm]
+jit = false
+
+[misc]
+logging = "own_tx=trace,discover=trace,chain=trace,network=trace"
+#log_file = "/var/log/parity.log"
+color = true
