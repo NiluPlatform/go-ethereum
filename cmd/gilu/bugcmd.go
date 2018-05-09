@@ -26,10 +26,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/NiluPlatform/go-nilu/cmd/internal/browser"
-	"github.com/NiluPlatform/go-nilu/params"
+	"github.com/ethereum/go-ethereum/cmd/internal/browser"
+	"github.com/ethereum/go-ethereum/params"
 
-	"github.com/NiluPlatform/go-nilu/cmd/utils"
+	"github.com/ethereum/go-ethereum/cmd/utils"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -41,7 +41,7 @@ var bugCommand = cli.Command{
 	Category:  "MISCELLANEOUS COMMANDS",
 }
 
-const issueUrl = "https://github.com/NiluPlatform/go-nilu/issues/new"
+const issueURL = "https://github.com/ethereum/go-ethereum/issues/new"
 
 // reportBug reports a bug by opening a new URL to the go-ethereum GH issue
 // tracker and setting default values as the issue body.
@@ -58,8 +58,8 @@ func reportBug(ctx *cli.Context) error {
 	fmt.Fprintln(&buff, header)
 
 	// open a new GH issue
-	if !browser.Open(issueUrl + "?body=" + url.QueryEscape(buff.String())) {
-		fmt.Printf("Please file a new issue at %s using this template:\n\n%s", issueUrl, buff.String())
+	if !browser.Open(issueURL + "?body=" + url.QueryEscape(buff.String())) {
+		fmt.Printf("Please file a new issue at %s using this template:\n\n%s", issueURL, buff.String())
 	}
 	return nil
 }
