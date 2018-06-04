@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/NiluPlatform/go-nilu/accounts/abi"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/core/state"
+	"github.com/NiluPlatform/go-nilu/core/vm"
+	"github.com/NiluPlatform/go-nilu/ethdb"
 )
 
 func TestDefaults(t *testing.T) {

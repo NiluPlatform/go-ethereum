@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/nat"
+	"github.com/NiluPlatform/go-nilu/p2p"
+	"github.com/NiluPlatform/go-nilu/p2p/nat"
 )
 
 const (

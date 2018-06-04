@@ -23,7 +23,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/NiluPlatform/go-nilu/common/hexutil"
 	"gopkg.in/fatih/set.v0"
 )
 

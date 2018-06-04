@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/NiluPlatform/go-nilu/common"
 )
 
 func (Address) Generate(rand *rand.Rand, size int) reflect.Value {

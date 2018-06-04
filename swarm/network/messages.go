@@ -21,11 +21,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/ethereum/go-ethereum/contracts/chequebook"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/swarm/network/kademlia"
-	"github.com/ethereum/go-ethereum/swarm/services/swap"
-	"github.com/ethereum/go-ethereum/swarm/storage"
+	"github.com/NiluPlatform/go-nilu/contracts/chequebook"
+	"github.com/NiluPlatform/go-nilu/p2p/discover"
+	"github.com/NiluPlatform/go-nilu/swarm/network/kademlia"
+	"github.com/NiluPlatform/go-nilu/swarm/services/swap"
+	"github.com/NiluPlatform/go-nilu/swarm/storage"
 )
 
 /*

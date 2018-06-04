@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/NiluPlatform/go-nilu/node"
+	"github.com/NiluPlatform/go-nilu/p2p"
+	"github.com/NiluPlatform/go-nilu/rpc"
 )
 
 // SampleService is a trivial network service that can be attached to a node for

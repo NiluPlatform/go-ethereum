@@ -22,13 +22,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
-	"github.com/ethereum/go-ethereum/swarm/network/kademlia"
-	"github.com/ethereum/go-ethereum/swarm/storage"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/log"
+	"github.com/NiluPlatform/go-nilu/metrics"
+	"github.com/NiluPlatform/go-nilu/p2p/discover"
+	"github.com/NiluPlatform/go-nilu/p2p/netutil"
+	"github.com/NiluPlatform/go-nilu/swarm/network/kademlia"
+	"github.com/NiluPlatform/go-nilu/swarm/storage"
 )
 
 // Hive is the logistic manager of the swarm

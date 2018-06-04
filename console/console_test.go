@@ -26,12 +26,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/internal/jsre"
-	"github.com/ethereum/go-ethereum/node"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/consensus/ethash"
+	"github.com/NiluPlatform/go-nilu/core"
+	"github.com/NiluPlatform/go-nilu/eth"
+	"github.com/NiluPlatform/go-nilu/internal/jsre"
+	"github.com/NiluPlatform/go-nilu/node"
 )
 
 const (

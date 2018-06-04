@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/NiluPlatform/go-nilu/params"
 )
 
 // Forks table defines supported forks and their chain config.

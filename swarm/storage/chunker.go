@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/NiluPlatform/go-nilu/metrics"
 )
 
 /*

@@ -24,8 +24,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common/compiler"
+	"github.com/NiluPlatform/go-nilu/accounts/abi/bind"
+	"github.com/NiluPlatform/go-nilu/common/compiler"
 )
 
 var (

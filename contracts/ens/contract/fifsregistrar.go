@@ -6,10 +6,10 @@ package contract
 import (
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/NiluPlatform/go-nilu/accounts/abi"
+	"github.com/NiluPlatform/go-nilu/accounts/abi/bind"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/core/types"
 )
 
 // FIFSRegistrarABI is the input ABI used to generate the binding from.
