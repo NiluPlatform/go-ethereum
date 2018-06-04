@@ -23,11 +23,11 @@ package ens
 import (
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/contracts/ens/contract"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/NiluPlatform/go-nilu/accounts/abi/bind"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/contracts/ens/contract"
+	"github.com/NiluPlatform/go-nilu/core/types"
+	"github.com/NiluPlatform/go-nilu/crypto"
 )
 
 var (

@@ -23,14 +23,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/bitutil"
-	"github.com/ethereum/go-ethereum/core/bloombits"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/node"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/common/bitutil"
+	"github.com/NiluPlatform/go-nilu/core/bloombits"
+	"github.com/NiluPlatform/go-nilu/core/rawdb"
+	"github.com/NiluPlatform/go-nilu/core/types"
+	"github.com/NiluPlatform/go-nilu/ethdb"
+	"github.com/NiluPlatform/go-nilu/event"
+	"github.com/NiluPlatform/go-nilu/node"
 )
 
 func BenchmarkBloomBits512(b *testing.B) {

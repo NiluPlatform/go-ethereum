@@ -20,11 +20,11 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
-	"github.com/ethereum/go-ethereum/contracts/ens/contract"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/NiluPlatform/go-nilu/accounts/abi/bind"
+	"github.com/NiluPlatform/go-nilu/accounts/abi/bind/backends"
+	"github.com/NiluPlatform/go-nilu/contracts/ens/contract"
+	"github.com/NiluPlatform/go-nilu/core"
+	"github.com/NiluPlatform/go-nilu/crypto"
 )
 
 var (

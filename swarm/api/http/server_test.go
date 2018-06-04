@@ -26,11 +26,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/swarm/api"
-	swarm "github.com/ethereum/go-ethereum/swarm/api/client"
-	"github.com/ethereum/go-ethereum/swarm/storage"
-	"github.com/ethereum/go-ethereum/swarm/testutil"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/swarm/api"
+	swarm "github.com/NiluPlatform/go-nilu/swarm/api/client"
+	"github.com/NiluPlatform/go-nilu/swarm/storage"
+	"github.com/NiluPlatform/go-nilu/swarm/testutil"
 )
 
 func TestBzzGetPath(t *testing.T) {

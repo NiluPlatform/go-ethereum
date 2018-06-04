@@ -24,15 +24,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/consensus/ethash"
+	"github.com/NiluPlatform/go-nilu/core/rawdb"
+	"github.com/NiluPlatform/go-nilu/core/state"
+	"github.com/NiluPlatform/go-nilu/core/types"
+	"github.com/NiluPlatform/go-nilu/core/vm"
+	"github.com/NiluPlatform/go-nilu/crypto"
+	"github.com/NiluPlatform/go-nilu/ethdb"
+	"github.com/NiluPlatform/go-nilu/params"
 )
 
 // Test fork of length N starting from block i
@@ -1197,7 +1197,7 @@ func TestEIP161AccountRemoval(t *testing.T) {
 // tests that under weird reorg conditions the blockchain and its internal header-
 // chain return the same latest block/header.
 //
-// https://github.com/ethereum/go-ethereum/pull/15941
+// https://github.com/NiluPlatform/go-nilu/pull/15941
 func TestBlockchainHeaderchainReorgConsistency(t *testing.T) {
 	// Generate a canonical chain to act as the main dataset
 	engine := ethash.NewFaker()

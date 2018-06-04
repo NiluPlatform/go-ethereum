@@ -37,13 +37,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ethereum/go-ethereum/contracts/chequebook"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p"
-	bzzswap "github.com/ethereum/go-ethereum/swarm/services/swap"
-	"github.com/ethereum/go-ethereum/swarm/services/swap/swap"
-	"github.com/ethereum/go-ethereum/swarm/storage"
+	"github.com/NiluPlatform/go-nilu/contracts/chequebook"
+	"github.com/NiluPlatform/go-nilu/log"
+	"github.com/NiluPlatform/go-nilu/metrics"
+	"github.com/NiluPlatform/go-nilu/p2p"
+	bzzswap "github.com/NiluPlatform/go-nilu/swarm/services/swap"
+	"github.com/NiluPlatform/go-nilu/swarm/services/swap/swap"
+	"github.com/NiluPlatform/go-nilu/swarm/storage"
 )
 
 //metrics variables

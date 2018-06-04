@@ -26,13 +26,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/consensus"
+	"github.com/NiluPlatform/go-nilu/core/rawdb"
+	"github.com/NiluPlatform/go-nilu/core/types"
+	"github.com/NiluPlatform/go-nilu/ethdb"
+	"github.com/NiluPlatform/go-nilu/log"
+	"github.com/NiluPlatform/go-nilu/params"
 	"github.com/hashicorp/golang-lru"
 )
 

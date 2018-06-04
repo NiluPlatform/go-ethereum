@@ -22,8 +22,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/NiluPlatform/go-nilu/accounts/abi"
+	"github.com/NiluPlatform/go-nilu/common"
 
 	"bytes"
 	"os"

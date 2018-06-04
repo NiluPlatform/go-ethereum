@@ -21,12 +21,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/light"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/core/rawdb"
+	"github.com/NiluPlatform/go-nilu/crypto"
+	"github.com/NiluPlatform/go-nilu/eth"
+	"github.com/NiluPlatform/go-nilu/ethdb"
+	"github.com/NiluPlatform/go-nilu/light"
 )
 
 var testBankSecureTrieKey = secAddr(testBankAddress)

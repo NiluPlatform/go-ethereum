@@ -19,7 +19,7 @@ package storage
 import (
 	"encoding/binary"
 
-	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/NiluPlatform/go-nilu/metrics"
 )
 
 //metrics variables

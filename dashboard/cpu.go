@@ -21,7 +21,7 @@ package dashboard
 import (
 	"syscall"
 
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/NiluPlatform/go-nilu/log"
 )
 
 // getProcessCPUTime retrieves the process' CPU time since program startup.

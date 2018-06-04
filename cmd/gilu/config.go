@@ -27,12 +27,12 @@ import (
 
 	cli "gopkg.in/urfave/cli.v1"
 
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/dashboard"
-	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/params"
-	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
+	"github.com/NiluPlatform/go-nilu/cmd/utils"
+	"github.com/NiluPlatform/go-nilu/dashboard"
+	"github.com/NiluPlatform/go-nilu/eth"
+	"github.com/NiluPlatform/go-nilu/node"
+	"github.com/NiluPlatform/go-nilu/params"
+	whisper "github.com/NiluPlatform/go-nilu/whisper/whisperv6"
 	"github.com/naoina/toml"
 )
 

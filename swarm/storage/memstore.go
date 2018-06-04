@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/NiluPlatform/go-nilu/log"
+	"github.com/NiluPlatform/go-nilu/metrics"
 )
 
 //metrics variables

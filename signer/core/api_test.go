@@ -27,13 +27,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/NiluPlatform/go-nilu/accounts/keystore"
+	"github.com/NiluPlatform/go-nilu/cmd/utils"
+	"github.com/NiluPlatform/go-nilu/common"
+	"github.com/NiluPlatform/go-nilu/common/hexutil"
+	"github.com/NiluPlatform/go-nilu/core/types"
+	"github.com/NiluPlatform/go-nilu/internal/ethapi"
+	"github.com/NiluPlatform/go-nilu/rlp"
 )
 
 //Used for testing
