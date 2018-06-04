@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/NiluPlatform/go-nilu/internal/cmdtest"
+	"github.com/ethereum/go-ethereum/internal/cmdtest"
 )
 
 func tmpdir(t *testing.T) string {
@@ -43,7 +43,7 @@ type testgeth struct {
 }
 
 func init() {
-	// Run the app if we've been exec'd as "geth-test" in runGeth.
+	// Run the app if we've been exec'd as "gilu-test" in runGeth.
 	reexec.Register("gilu-test", func() {
 		if err := app.Run(os.Args); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -61,7 +61,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// spawns geth with the given command line args. If the args don't set --datadir, the
+// spawns gilu with the given command line args. If the args don't set --datadir, the
 // child g gets a temporary data directory.
 func runGeth(t *testing.T, args ...string) *testgeth {
 	tt := &testgeth{}
@@ -90,7 +90,7 @@ func runGeth(t *testing.T, args ...string) *testgeth {
 		}()
 	}
 
-	// Boot "geth". This actually runs the test binary but the TestMain
+	// Boot "gilu". This actually runs the test binary but the TestMain
 	// function will prevent any tests from running.
 	tt.Run("gilu-test", args...)
 

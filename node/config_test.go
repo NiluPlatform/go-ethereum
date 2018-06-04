@@ -24,8 +24,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/NiluPlatform/go-nilu/crypto"
-	"github.com/NiluPlatform/go-nilu/p2p"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // Tests that datadirs can be successfully created, be them manually configured
@@ -79,9 +79,9 @@ func TestIPCPathResolution(t *testing.T) {
 		{"data", "/gilu.ipc", false, "/gilu.ipc"},
 		{"", "", true, ``},
 		{"data", "", true, ``},
-		{"", "gilu.ipc", true, `\\.\pipe\gilu.ipc`},
-		{"data", "gilu.ipc", true, `\\.\pipe\gilu.ipc`},
-		{"data", `\\.\pipe\gilu.ipc`, true, `\\.\pipe\gilu.ipc`},
+		{"", "gilu.ipc", true, `\\.\pipe\geth.ipc`},
+		{"data", "gilu.ipc", true, `\\.\pipe\geth.ipc`},
+		{"data", `\\.\pipe\geth.ipc`, true, `\\.\pipe\geth.ipc`},
 	}
 	for i, test := range tests {
 		// Only run when platform/test match
