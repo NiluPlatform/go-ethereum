@@ -84,7 +84,7 @@ var dashboardContent = `
 									{{if .FaucetPage}}<li id="faucet_menu"><a onclick="load('#faucet')"><i class="fa fa-bath"></i> Crypto Faucet</a></li>{{end}}
 									<li id="connect_menu"><a><i class="fa fa-plug"></i> Connect Yourself</a>
 										<ul id="connect_list" class="nav child_menu">
-											<li><a onclick="$('#connect_menu').removeClass('active'); $('#connect_list').toggle(); load('#geth')">Go Ethereum: Geth</a></li>
+											<li><a onclick="$('#connect_menu').removeClass('active'); $('#connect_list').toggle(); load('#gilu')">Go Ethereum: Geth</a></li>
 											<li><a onclick="$('#connect_menu').removeClass('active'); $('#connect_list').toggle(); load('#mist')">Go Ethereum: Wallet & Mist</a></li>
 											<li><a onclick="$('#connect_menu').removeClass('active'); $('#connect_list').toggle(); load('#mobile')">Go Ethereum: Android & iOS</a></li>{{if .Ethash}}
 											<li><a onclick="$('#connect_menu').removeClass('active'); $('#connect_list').toggle(); load('#other')">Other Ethereum Clients</a></li>{{end}}
@@ -97,7 +97,7 @@ var dashboardContent = `
 					</div>
 				</div>
 				<div class="right_col" role="main" style="padding: 0 !important">
-					<div id="geth" hidden style="padding: 16px;">
+					<div id="gilu" hidden style="padding: 16px;">
 						<div class="page-title">
 							<div class="title_left">
 								<h3>Connect Yourself &ndash; Go Ethereum: Geth</h3>
@@ -116,8 +116,8 @@ var dashboardContent = `
 										<p>Initial processing required to execute all transactions may require non-negligible time and disk capacity required to store all past state may be non-insignificant. High end machines with SSD storage, modern CPUs and 8GB+ RAM are recommended.</p>
 										<br/>
 										<p>To run an archive node, download <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> and start Geth with:
-											<pre>geth --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
-											<pre>geth --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --cache=1024 --syncmode=full{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesFullFlat}}</pre>
+											<pre>gilu --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
+											<pre>gilu --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --cache=1024 --syncmode=full{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesFlat}}</pre>
 										</p>
 										<br/>
 										<p>You can download Geth from <a href="https://geth.ethereum.org/downloads/" target="about:blank">https://geth.ethereum.org/downloads/</a>.</p>
@@ -135,8 +135,8 @@ var dashboardContent = `
 										<p>Initial processing required to synchronize is more bandwidth intensive, but is light on the CPU and has significantly reduced disk requirements. Mid range machines with HDD storage, decent CPUs and 4GB+ RAM should be enough.</p>
 										<br/>
 										<p>To run a full node, download <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> and start Geth with:
-											<pre>geth --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
-											<pre>geth --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --cache=512{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesFullFlat}}</pre>
+											<pre>gilu --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
+											<pre>gilu --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --cache=512{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesFlat}}</pre>
 										</p>
 										<br/>
 										<p>You can download Geth from <a href="https://geth.ethereum.org/downloads/" target="about:blank">https://geth.ethereum.org/downloads/</a>.</p>
@@ -157,8 +157,8 @@ var dashboardContent = `
 										<p>Initial processing required to synchronize is light, as it only verifies the validity of the headers; similarly required disk capacity is small, tallying around 500 bytes per header. Low end machines with arbitrary storage, weak CPUs and 512MB+ RAM should cope well.</p>
 										<br/>
 										<p>To run a light node, download <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> and start Geth with:
-											<pre>geth --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
-											<pre>geth --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --syncmode=light{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesLightFlat}}</pre>
+											<pre>gilu --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
+											<pre>gilu --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --syncmode=light{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesFlat}}</pre>
 										</p>
 										<br/>
 										<p>You can download Geth from <a href="https://geth.ethereum.org/downloads/" target="about:blank">https://geth.ethereum.org/downloads/</a>.</p>
@@ -176,8 +176,8 @@ var dashboardContent = `
 										<p>Initial processing required to synchronize is light, as it only verifies the validity of the headers; similarly required disk capacity is small, tallying around 500 bytes per header. Embedded machines with arbitrary storage, low power CPUs and 128MB+ RAM may work.</p>
 										<br/>
 										<p>To run an embedded node, download <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> and start Geth with:
-											<pre>geth --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
-											<pre>geth --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --cache=16 --ethash.cachesinmem=1 --syncmode=light{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesLightFlat}}</pre>
+											<pre>gilu --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
+											<pre>gilu --networkid={{.NetworkID}} --datadir=$HOME/.{{.Network}} --cache=16 --ethash.cachesinmem=1 --syncmode=light{{if .Ethstats}} --ethstats='{{.Ethstats}}'{{end}} --bootnodes={{.BootnodesFlat}}</pre>
 										</p>
 										<br/>
 										<p>You can download Geth from <a href="https://geth.ethereum.org/downloads/" target="about:blank">https://geth.ethereum.org/downloads/</a>.</p>
@@ -205,10 +205,10 @@ var dashboardContent = `
 										<p>Under the hood the wallet is backed by a go-ethereum full node, meaning that a mid range machine is assumed. Similarly, synchronization is based on <strong>fast-sync</strong>, which will download all blockchain data from the network and make it available to the wallet. Light nodes cannot currently fully back the wallet, but it's a target actively pursued.</p>
 										<br/>
 										<p>To connect with the Ethereum Wallet, you'll need to initialize your private network first via Geth as the wallet does not currently support calling Geth directly. To initialize your local chain, download <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> and run:
-											<pre>geth --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
+											<pre>gilu --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
 										</p>
 										<p>With your local chain initialized, you can start the Ethereum Wallet:
-											<pre>ethereumwallet --rpc $HOME/.{{.Network}}/gilu.ipc --node-networkid={{.NetworkID}} --node-datadir=$HOME/.{{.Network}}{{if .Ethstats}} --node-ethstats='{{.Ethstats}}'{{end}} --node-bootnodes={{.BootnodesFullFlat}}</pre>
+											<pre>ethereumwallet --rpc $HOME/.{{.Network}}/gilu.ipc --node-networkid={{.NetworkID}} --node-datadir=$HOME/.{{.Network}}{{if .Ethstats}} --node-ethstats='{{.Ethstats}}'{{end}} --node-bootnodes={{.BootnodesFlat}}</pre>
 										<p>
 										<br/>
 										<p>You can download the Ethereum Wallet from <a href="https://github.com/ethereum/mist/releases" target="about:blank">https://github.com/ethereum/mist/releases</a>.</p>
@@ -226,10 +226,10 @@ var dashboardContent = `
 										<p>Under the hood the browser is backed by a go-ethereum full node, meaning that a mid range machine is assumed. Similarly, synchronization is based on <strong>fast-sync</strong>, which will download all blockchain data from the network and make it available to the wallet. Light nodes cannot currently fully back the wallet, but it's a target actively pursued.</p>
 										<br/>
 										<p>To connect with the Mist browser, you'll need to initialize your private network first via Geth as Mist does not currently support calling Geth directly. To initialize your local chain, download <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> and run:
-											<pre>geth --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
+											<pre>gilu --datadir=$HOME/.{{.Network}} init {{.GethGenesis}}</pre>
 										</p>
 										<p>With your local chain initialized, you can start Mist:
-											<pre>mist --rpc $HOME/.{{.Network}}/gilu.ipc --node-networkid={{.NetworkID}} --node-datadir=$HOME/.{{.Network}}{{if .Ethstats}} --node-ethstats='{{.Ethstats}}'{{end}} --node-bootnodes={{.BootnodesFullFlat}}</pre>
+											<pre>mist --rpc $HOME/.{{.Network}}/gilu.ipc --node-networkid={{.NetworkID}} --node-datadir=$HOME/.{{.Network}}{{if .Ethstats}} --node-ethstats='{{.Ethstats}}'{{end}} --node-bootnodes={{.BootnodesFlat}}</pre>
 										<p>
 										<br/>
 										<p>You can download the Mist browser from <a href="https://github.com/ethereum/mist/releases" target="about:blank">https://github.com/ethereum/mist/releases</a>.</p>
@@ -258,10 +258,10 @@ var dashboardContent = `
 										<br/>
 										<p>The stable Android archives are distributed via Maven Central, and the develop snapshots via the Sonatype repositories. Before proceeding, please ensure you have a recent version configured in your Android project. You can find details in <a href="https://github.com/NiluPlatform/go-nilu/wiki/Mobile:-Introduction#android-archive" target="about:blank">Mobile: Introduction &ndash; Android archive</a>.
 										<p>Before connecting to the Ethereum network, download the <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> genesis json file and either store it in your Android project as a resource file you can access, or save it as a string in a variable. You're going to need to to initialize your client.</p>
-										<p>Inside your Java code you can now import the geth archive and connect to Ethereum:
-											<pre>import org.ethereum.geth.*;</pre>
+										<p>Inside your Java code you can now import the gilu archive and connect to Ethereum:
+											<pre>import org.ethereum.gilu.*;</pre>
 <pre>
-Enodes bootnodes = new Enodes();{{range .BootnodesLight}}
+Enodes bootnodes = new Enodes();{{range .Bootnodes}}
 bootnodes.append(new Enode("{{.}}"));{{end}}
 
 NodeConfig config = new NodeConfig();
@@ -289,12 +289,12 @@ node.start();
 										<br/>
 										<p>Both stable and develop builds of the iOS framework are available via CocoaPods. Before proceeding, please ensure you have a recent version configured in your iOS project. You can find details in <a href="https://github.com/NiluPlatform/go-nilu/wiki/Mobile:-Introduction#ios-framework" target="about:blank">Mobile: Introduction &ndash; iOS framework</a>.
 										<p>Before connecting to the Ethereum network, download the <a href="/{{.GethGenesis}}"><code>{{.GethGenesis}}</code></a> genesis json file and either store it in your iOS project as a resource file you can access, or save it as a string in a variable. You're going to need to to initialize your client.</p>
-										<p>Inside your Swift code you can now import the geth framework and connect to Ethereum (ObjC should be analogous):
+										<p>Inside your Swift code you can now import the gilu framework and connect to Ethereum (ObjC should be analogous):
 											<pre>import Geth</pre>
 <pre>
 var error: NSError?
 
-let bootnodes = GethNewEnodesEmpty(){{range .BootnodesLight}}
+let bootnodes = GethNewEnodesEmpty(){{range .Bootnodes}}
 bootnodes?.append(GethNewEnode("{{.}}", &error)){{end}}
 
 let config = GethNewNodeConfig()
@@ -419,7 +419,7 @@ try! node?.start();
 										<p>Puppeth is a tool to aid you in creating a new Ethereum network down to the genesis block, bootnodes, signers, ethstats server, crypto faucet, wallet browsers, block explorer, dashboard and more; without the hassle that it would normally entail to manually configure all these services one by one.</p>
 										<p>Puppeth uses ssh to dial in to remote servers, and builds its network components out of docker containers using docker-compose. The user is guided through the process via a command line wizard that does the heavy lifting and topology configuration automatically behind the scenes.</p>
 										<br/>
-										<p>Puppeth is distributed as part of the <a href="https://geth.ethereum.org/downloads/" target="about:blank">Geth &amp; Tools</a> bundles, but can also be installed separately via:<pre>go get github.com/NiluPlatform/go-nilu/cmd/puppeth</pre></p>
+										<p>Puppeth is distributed as part of the <a href="https://gilu.ethereum.org/downloads/" target="about:blank">Geth &amp; Tools</a> bundles, but can also be installed separately via:<pre>go get github.com/NiluPlatform/go-nilu/cmd/puppeth</pre></p>
 										<br/>
 										<p><em>Copyright 2017. The go-ethereum Authors.</em></p>
 									</div>
@@ -445,7 +445,7 @@ try! node?.start();
 				window.location.hash = hash;
 
 				// Fade out all possible pages (yes, ugly, no, don't care)
-				$("#geth").fadeOut(300)
+				$("#gilu").fadeOut(300)
 				$("#mist").fadeOut(300)
 				$("#mobile").fadeOut(300)
 				$("#other").fadeOut(300)
@@ -595,44 +595,43 @@ func deployDashboard(client *sshClient, network string, conf *config, config *da
 		statsLogin = ""
 	}
 	indexfile := new(bytes.Buffer)
-	bootCpp := make([]string, len(conf.bootFull))
-	for i, boot := range conf.bootFull {
+	bootCpp := make([]string, len(conf.bootnodes))
+	for i, boot := range conf.bootnodes {
 		bootCpp[i] = "required:" + strings.TrimPrefix(boot, "enode://")
 	}
-	bootHarmony := make([]string, len(conf.bootFull))
-	for i, boot := range conf.bootFull {
+	bootHarmony := make([]string, len(conf.bootnodes))
+	for i, boot := range conf.bootnodes {
 		bootHarmony[i] = fmt.Sprintf("-Dpeer.active.%d.url=%s", i, boot)
 	}
-	bootPython := make([]string, len(conf.bootFull))
-	for i, boot := range conf.bootFull {
+	bootPython := make([]string, len(conf.bootnodes))
+	for i, boot := range conf.bootnodes {
 		bootPython[i] = "'" + boot + "'"
 	}
 	template.Must(template.New("").Parse(dashboardContent)).Execute(indexfile, map[string]interface{}{
-		"Network":            network,
-		"NetworkID":          conf.Genesis.Config.ChainId,
-		"NetworkTitle":       strings.Title(network),
-		"EthstatsPage":       config.ethstats,
-		"ExplorerPage":       config.explorer,
-		"WalletPage":         config.wallet,
-		"FaucetPage":         config.faucet,
-		"GethGenesis":        network + ".json",
-		"BootnodesFull":      conf.bootFull,
-		"BootnodesLight":     conf.bootLight,
-		"BootnodesFullFlat":  strings.Join(conf.bootFull, ","),
-		"BootnodesLightFlat": strings.Join(conf.bootLight, ","),
-		"Ethstats":           statsLogin,
-		"Ethash":             conf.Genesis.Config.Ethash != nil,
-		"CppGenesis":         network + "-cpp.json",
-		"CppBootnodes":       strings.Join(bootCpp, " "),
-		"HarmonyGenesis":     network + "-harmony.json",
-		"HarmonyBootnodes":   strings.Join(bootHarmony, " "),
-		"ParityGenesis":      network + "-parity.json",
-		"PythonGenesis":      network + "-python.json",
-		"PythonBootnodes":    strings.Join(bootPython, ","),
-		"Homestead":          conf.Genesis.Config.HomesteadBlock,
-		"Tangerine":          conf.Genesis.Config.EIP150Block,
-		"Spurious":           conf.Genesis.Config.EIP155Block,
-		"Byzantium":          conf.Genesis.Config.ByzantiumBlock,
+		"Network":          network,
+		"NetworkID":        conf.Genesis.Config.ChainId,
+		"NetworkTitle":     strings.Title(network),
+		"EthstatsPage":     config.ethstats,
+		"ExplorerPage":     config.explorer,
+		"WalletPage":       config.wallet,
+		"FaucetPage":       config.faucet,
+		"GethGenesis":      network + ".json",
+		"Bootnodes":        conf.bootnodes,
+		"BootnodesFlat":    strings.Join(conf.bootnodes, ","),
+		"Ethstats":         statsLogin,
+		"Ethash":           conf.Genesis.Config.Ethash != nil,
+		"CppGenesis":       network + "-cpp.json",
+		"CppBootnodes":     strings.Join(bootCpp, " "),
+		"HarmonyGenesis":   network + "-harmony.json",
+		"HarmonyBootnodes": strings.Join(bootHarmony, " "),
+		"ParityGenesis":    network + "-parity.json",
+		"PythonGenesis":    network + "-python.json",
+		"PythonBootnodes":  strings.Join(bootPython, ","),
+		"Homestead":        conf.Genesis.Config.HomesteadBlock,
+		"Tangerine":        conf.Genesis.Config.EIP150Block,
+		"Spurious":         conf.Genesis.Config.EIP155Block,
+		"Byzantium":        conf.Genesis.Config.ByzantiumBlock,
+		"Constantinople":   conf.Genesis.Config.ConstantinopleBlock,
 	})
 	files[filepath.Join(workdir, "index.html")] = indexfile.Bytes()
 
@@ -651,7 +650,7 @@ func deployDashboard(client *sshClient, network string, conf *config, config *da
 		harmonySpecJSON, _ := conf.Genesis.MarshalJSON()
 		files[filepath.Join(workdir, network+"-harmony.json")] = harmonySpecJSON
 
-		paritySpec, err := newParityChainSpec(network, conf.Genesis, conf.bootFull)
+		paritySpec, err := newParityChainSpec(network, conf.Genesis, conf.bootnodes)
 		if err != nil {
 			return nil, err
 		}
@@ -684,7 +683,7 @@ func deployDashboard(client *sshClient, network string, conf *config, config *da
 	return nil, client.Stream(fmt.Sprintf("cd %s && docker-compose -p %s up -d --build --force-recreate", workdir, network))
 }
 
-// dashboardInfos is returned from an dashboard status check to allow reporting
+// dashboardInfos is returned from a dashboard status check to allow reporting
 // various configuration parameters.
 type dashboardInfos struct {
 	host    string

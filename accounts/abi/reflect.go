@@ -1,18 +1,18 @@
-// Copyright 2016 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2016 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package abi
 
@@ -24,7 +24,7 @@ import (
 // indirect recursively dereferences the value until it either gets the value
 // or finds a big.Int
 func indirect(v reflect.Value) reflect.Value {
-	if v.Kind() == reflect.Ptr && v.Elem().Type() != derefbig_t {
+	if v.Kind() == reflect.Ptr && v.Elem().Type() != derefbigT {
 		return indirect(v.Elem())
 	}
 	return v
@@ -36,26 +36,26 @@ func reflectIntKindAndType(unsigned bool, size int) (reflect.Kind, reflect.Type)
 	switch size {
 	case 8:
 		if unsigned {
-			return reflect.Uint8, uint8_t
+			return reflect.Uint8, uint8T
 		}
-		return reflect.Int8, int8_t
+		return reflect.Int8, int8T
 	case 16:
 		if unsigned {
-			return reflect.Uint16, uint16_t
+			return reflect.Uint16, uint16T
 		}
-		return reflect.Int16, int16_t
+		return reflect.Int16, int16T
 	case 32:
 		if unsigned {
-			return reflect.Uint32, uint32_t
+			return reflect.Uint32, uint32T
 		}
-		return reflect.Int32, int32_t
+		return reflect.Int32, int32T
 	case 64:
 		if unsigned {
-			return reflect.Uint64, uint64_t
+			return reflect.Uint64, uint64T
 		}
-		return reflect.Int64, int64_t
+		return reflect.Int64, int64T
 	}
-	return reflect.Ptr, big_t
+	return reflect.Ptr, bigT
 }
 
 // mustArrayToBytesSlice creates a new byte slice with the exact same size as value
@@ -107,6 +107,22 @@ func requireUnpackKind(v reflect.Value, t reflect.Type, k reflect.Kind,
 		}
 	default:
 		return fmt.Errorf("abi: cannot unmarshal tuple into %v", t)
+	}
+	return nil
+}
+
+// requireUniqueStructFieldNames makes sure field names don't collide
+func requireUniqueStructFieldNames(args Arguments) error {
+	exists := make(map[string]bool)
+	for _, arg := range args {
+		field := capitalise(arg.Name)
+		if field == "" {
+			return fmt.Errorf("abi: purely underscored output cannot unpack to struct")
+		}
+		if exists[field] {
+			return fmt.Errorf("abi: multiple outputs mapping to the same struct field '%s'", field)
+		}
+		exists[field] = true
 	}
 	return nil
 }

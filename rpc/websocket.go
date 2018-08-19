@@ -1,24 +1,26 @@
-// Copyright 2015 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2015 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package rpc
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -32,6 +34,23 @@ import (
 	"gopkg.in/fatih/set.v0"
 )
 
+// websocketJSONCodec is a custom JSON codec with payload size enforcement and
+// special number parsing.
+var websocketJSONCodec = websocket.Codec{
+	// Marshal is the stock JSON marshaller used by the websocket library too.
+	Marshal: func(v interface{}) ([]byte, byte, error) {
+		msg, err := json.Marshal(v)
+		return msg, websocket.TextFrame, err
+	},
+	// Unmarshal is a specialized unmarshaller to properly convert numbers.
+	Unmarshal: func(msg []byte, payloadType byte, v interface{}) error {
+		dec := json.NewDecoder(bytes.NewReader(msg))
+		dec.UseNumber()
+
+		return dec.Decode(v)
+	},
+}
+
 // WebsocketHandler returns a handler that serves JSON-RPC to WebSocket connections.
 //
 // allowedOrigins should be a comma-separated list of allowed origin URLs.
@@ -40,7 +59,16 @@ func (srv *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 	return websocket.Server{
 		Handshake: wsHandshakeValidator(allowedOrigins),
 		Handler: func(conn *websocket.Conn) {
-			srv.ServeCodec(NewJSONCodec(conn), OptionMethodInvocation|OptionSubscriptions)
+			// Create a custom encode/decode pair to enforce payload size and number encoding
+			conn.MaxPayloadBytes = maxRequestContentLength
+
+			encoder := func(v interface{}) error {
+				return websocketJSONCodec.Send(conn, v)
+			}
+			decoder := func(v interface{}) error {
+				return websocketJSONCodec.Receive(conn, v)
+			}
+			srv.ServeCodec(NewCodec(conn, encoder, decoder), OptionMethodInvocation|OptionSubscriptions)
 		},
 	}
 }

@@ -32,10 +32,13 @@ android:
 ios:
 	build/env.sh go run build/ci.go xcode --local
 	@echo "Done building."
-	@echo "Import \"$(GOBIN)/gilu.framework\" to use the library."
+	@echo "Import \"$(GOBIN)/Gilu.framework\" to use the library."
 
 test: all
 	build/env.sh go run build/ci.go test
+
+lint: ## Run linters.
+	build/env.sh go run build/ci.go lint
 
 clean:
 	rm -fr build/_workspace/pkg/ $(GOBIN)/*

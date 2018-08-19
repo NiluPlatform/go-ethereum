@@ -1,18 +1,18 @@
-// Copyright 2017 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2017 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 // +build linux darwin freebsd
 
@@ -47,7 +47,6 @@ func externalUnmount(mountPoint string) error {
 }
 
 func addFileToSwarm(sf *SwarmFile, content []byte, size int) error {
-
 	fkey, mhash, err := sf.mountInfo.swarmApi.AddFile(sf.mountInfo.LatestManifest, sf.path, sf.name, content, true)
 	if err != nil {
 		return err
@@ -64,11 +63,9 @@ func addFileToSwarm(sf *SwarmFile, content []byte, size int) error {
 
 	log.Info("Added new file:", "fname", sf.name, "New Manifest hash", mhash)
 	return nil
-
 }
 
 func removeFileFromSwarm(sf *SwarmFile) error {
-
 	mkey, err := sf.mountInfo.swarmApi.RemoveFile(sf.mountInfo.LatestManifest, sf.path, sf.name, true)
 	if err != nil {
 		return err
@@ -83,7 +80,6 @@ func removeFileFromSwarm(sf *SwarmFile) error {
 }
 
 func removeDirectoryFromSwarm(sd *SwarmDir) error {
-
 	if len(sd.directories) == 0 && len(sd.files) == 0 {
 		return nil
 	}
@@ -103,11 +99,9 @@ func removeDirectoryFromSwarm(sd *SwarmDir) error {
 	}
 
 	return nil
-
 }
 
 func appendToExistingFileInSwarm(sf *SwarmFile, content []byte, offset int64, length int64) error {
-
 	fkey, mhash, err := sf.mountInfo.swarmApi.AppendFile(sf.mountInfo.LatestManifest, sf.path, sf.name, sf.fileSize, content, sf.key, offset, length, true)
 	if err != nil {
 		return err
@@ -124,5 +118,4 @@ func appendToExistingFileInSwarm(sf *SwarmFile, content []byte, offset int64, le
 
 	log.Info("Appended file:", "fname", sf.name, "New Manifest hash", mhash)
 	return nil
-
 }

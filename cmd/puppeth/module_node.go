@@ -1,18 +1,18 @@
-// Copyright 2017 The go-nilu Authors
-// This file is part of go-nilu.
+// Copyright 2017 The go-ethereum Authors
+// This file is part of go-ethereum.
 //
-// go-nilu is free software: you can redistribute it and/or modify
+// go-ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// go-nilu is distributed in the hope that it will be useful,
+// go-ethereum is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with go-nilu. If not, see <http://www.gnu.org/licenses/>.
+// along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
 package main
 
@@ -40,11 +40,11 @@ ADD genesis.json /genesis.json
 	ADD signer.pass /signer.pass
 {{end}}
 RUN \
-  echo 'geth --cache 512 init /genesis.json' > geth.sh && \{{if .Unlock}}
-	echo 'mkdir -p /root/.ethereum/keystore/ && cp /signer.json /root/.ethereum/keystore/' >> geth.sh && \{{end}}
-	echo $'geth --networkid {{.NetworkID}} --cache 512 --port {{.Port}} --maxpeers {{.Peers}} {{.LightFlag}} --ethstats \'{{.Ethstats}}\' {{if .BootV4}}--bootnodesv4 {{.BootV4}}{{end}} {{if .BootV5}}--bootnodesv5 {{.BootV5}}{{end}} {{if .Etherbase}}--etherbase {{.Etherbase}} --mine --minerthreads 1{{end}} {{if .Unlock}}--unlock 0 --password /signer.pass --mine{{end}} --targetgaslimit {{.GasTarget}} --gasprice {{.GasPrice}}' >> geth.sh
+  echo 'gilu --cache 512 init /genesis.json' > gilu.sh && \{{if .Unlock}}
+	echo 'mkdir -p /root/.ethereum/keystore/ && cp /signer.json /root/.ethereum/keystore/' >> gilu.sh && \{{end}}
+	echo $'gilu --networkid {{.NetworkID}} --cache 512 --port {{.Port}} --maxpeers {{.Peers}} {{.LightFlag}} --ethstats \'{{.Ethstats}}\' {{if .Bootnodes}}--bootnodes {{.Bootnodes}}{{end}} {{if .Etherbase}}--etherbase {{.Etherbase}} --mine --minerthreads 1{{end}} {{if .Unlock}}--unlock 0 --password /signer.pass --mine{{end}} --targetgaslimit {{.GasTarget}} --gasprice {{.GasPrice}}' >> gilu.sh
 
-ENTRYPOINT ["/bin/sh", "geth.sh"]
+ENTRYPOINT ["/bin/sh", "gilu.sh"]
 `
 
 // nodeComposefile is the docker-compose.yml file required to deploy and maintain
@@ -56,15 +56,13 @@ services:
     build: .
     image: {{.Network}}/{{.Type}}
     ports:
-      - "{{.FullPort}}:{{.FullPort}}"
-      - "{{.FullPort}}:{{.FullPort}}/udp"{{if .Light}}
-      - "{{.LightPort}}:{{.LightPort}}/udp"{{end}}
+      - "{{.Port}}:{{.Port}}"
+      - "{{.Port}}:{{.Port}}/udp"
     volumes:
       - {{.Datadir}}:/root/.ethereum{{if .Ethashdir}}
       - {{.Ethashdir}}:/root/.ethash{{end}}
     environment:
-      - FULL_PORT={{.FullPort}}/tcp
-      - LIGHT_PORT={{.LightPort}}/udp
+      - PORT={{.Port}}/tcp
       - TOTAL_PEERS={{.TotalPeers}}
       - LIGHT_PEERS={{.LightPeers}}
       - STATS_NAME={{.Ethstats}}
@@ -82,12 +80,11 @@ services:
 // deployNode deploys a new Ethereum node container to a remote machine via SSH,
 // docker and docker-compose. If an instance with the specified network name
 // already exists there, it will be overwritten!
-func deployNode(client *sshClient, network string, bootv4, bootv5 []string, config *nodeInfos, nocache bool) ([]byte, error) {
+func deployNode(client *sshClient, network string, bootnodes []string, config *nodeInfos, nocache bool) ([]byte, error) {
 	kind := "sealnode"
 	if config.keyJSON == "" && config.etherbase == "" {
 		kind = "bootnode"
-		bootv4 = make([]string, 0)
-		bootv5 = make([]string, 0)
+		bootnodes = make([]string, 0)
 	}
 	// Generate the content to upload to the server
 	workdir := fmt.Sprintf("%d", rand.Int63())
@@ -100,11 +97,10 @@ func deployNode(client *sshClient, network string, bootv4, bootv5 []string, conf
 	dockerfile := new(bytes.Buffer)
 	template.Must(template.New("").Parse(nodeDockerfile)).Execute(dockerfile, map[string]interface{}{
 		"NetworkID": config.network,
-		"Port":      config.portFull,
+		"Port":      config.port,
 		"Peers":     config.peersTotal,
 		"LightFlag": lightFlag,
-		"BootV4":    strings.Join(bootv4, ","),
-		"BootV5":    strings.Join(bootv5, ","),
+		"Bootnodes": strings.Join(bootnodes, ","),
 		"Ethstats":  config.ethstats,
 		"Etherbase": config.etherbase,
 		"GasTarget": uint64(1000000 * config.gasTarget),
@@ -119,10 +115,9 @@ func deployNode(client *sshClient, network string, bootv4, bootv5 []string, conf
 		"Datadir":    config.datadir,
 		"Ethashdir":  config.ethashdir,
 		"Network":    network,
-		"FullPort":   config.portFull,
+		"Port":       config.port,
 		"TotalPeers": config.peersTotal,
 		"Light":      config.peersLight > 0,
-		"LightPort":  config.portFull + 1,
 		"LightPeers": config.peersLight,
 		"Ethstats":   config.ethstats[:strings.Index(config.ethstats, ":")],
 		"Etherbase":  config.etherbase,
@@ -157,10 +152,8 @@ type nodeInfos struct {
 	datadir    string
 	ethashdir  string
 	ethstats   string
-	portFull   int
-	portLight  int
-	enodeFull  string
-	enodeLight string
+	port       int
+	enode      string
 	peersTotal int
 	peersLight int
 	etherbase  string
@@ -174,15 +167,11 @@ type nodeInfos struct {
 // most - but not all - fields for reporting to the user.
 func (info *nodeInfos) Report() map[string]string {
 	report := map[string]string{
-		"Data directory":             info.datadir,
-		"Listener port (full nodes)": strconv.Itoa(info.portFull),
-		"Peer count (all total)":     strconv.Itoa(info.peersTotal),
-		"Peer count (light nodes)":   strconv.Itoa(info.peersLight),
-		"Ethstats username":          info.ethstats,
-	}
-	if info.peersLight > 0 {
-		// Light server enabled
-		report["Listener port (light nodes)"] = strconv.Itoa(info.portLight)
+		"Data directory":           info.datadir,
+		"Listener port":            strconv.Itoa(info.port),
+		"Peer count (all total)":   strconv.Itoa(info.peersTotal),
+		"Peer count (light nodes)": strconv.Itoa(info.peersLight),
+		"Ethstats username":        info.ethstats,
 	}
 	if info.gasTarget > 0 {
 		// Miner or signer node
@@ -209,7 +198,7 @@ func (info *nodeInfos) Report() map[string]string {
 	return report
 }
 
-// checkNode does a health-check against an boot or seal node server to verify
+// checkNode does a health-check against a boot or seal node server to verify
 // whether it's running, and if yes, whether it's responsive.
 func checkNode(client *sshClient, network string, boot bool) (*nodeInfos, error) {
 	kind := "bootnode"
@@ -232,7 +221,7 @@ func checkNode(client *sshClient, network string, boot bool) (*nodeInfos, error)
 
 	// Container available, retrieve its node ID and its genesis json
 	var out []byte
-	if out, err = client.Run(fmt.Sprintf("docker exec %s_%s_1 geth --exec admin.nodeInfo.id attach", network, kind)); err != nil {
+	if out, err = client.Run(fmt.Sprintf("docker exec %s_%s_1 gilu --exec admin.nodeInfo.id attach", network, kind)); err != nil {
 		return nil, ErrServiceUnreachable
 	}
 	id := bytes.Trim(bytes.TrimSpace(out), "\"")
@@ -250,7 +239,7 @@ func checkNode(client *sshClient, network string, boot bool) (*nodeInfos, error)
 		keyPass = string(bytes.TrimSpace(out))
 	}
 	// Run a sanity check to see if the devp2p is reachable
-	port := infos.portmap[infos.envvars["FULL_PORT"]]
+	port := infos.portmap[infos.envvars["PORT"]]
 	if err = checkPort(client.server, port); err != nil {
 		log.Warn(fmt.Sprintf("%s devp2p port seems unreachable", strings.Title(kind)), "server", client.server, "port", port, "err", err)
 	}
@@ -259,8 +248,7 @@ func checkNode(client *sshClient, network string, boot bool) (*nodeInfos, error)
 		genesis:    genesis,
 		datadir:    infos.volumes["/root/.ethereum"],
 		ethashdir:  infos.volumes["/root/.ethash"],
-		portFull:   infos.portmap[infos.envvars["FULL_PORT"]],
-		portLight:  infos.portmap[infos.envvars["LIGHT_PORT"]],
+		port:       port,
 		peersTotal: totalPeers,
 		peersLight: lightPeers,
 		ethstats:   infos.envvars["STATS_NAME"],
@@ -270,9 +258,7 @@ func checkNode(client *sshClient, network string, boot bool) (*nodeInfos, error)
 		gasTarget:  gasTarget,
 		gasPrice:   gasPrice,
 	}
-	stats.enodeFull = fmt.Sprintf("enode://%s@%s:%d", id, client.address, stats.portFull)
-	if stats.portLight != 0 {
-		stats.enodeLight = fmt.Sprintf("enode://%s@%s:%d?discport=%d", id, client.address, stats.portFull, stats.portLight)
-	}
+	stats.enode = fmt.Sprintf("enode://%s@%s:%d", id, client.address, stats.port)
+
 	return stats, nil
 }

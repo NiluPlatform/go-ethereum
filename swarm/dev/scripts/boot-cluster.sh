@@ -169,7 +169,7 @@ start_geth_node() {
     --verbosity "6"
   )
 
-  start_node "gilu" "${GETH_IP}" "$(which gilu)" ${args[@]}
+  start_node "geth" "${GETH_IP}" "$(which geth)" ${args[@]}
 }
 
 start_swarm_nodes() {

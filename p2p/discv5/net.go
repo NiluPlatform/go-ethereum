@@ -29,7 +29,6 @@ import (
 	"github.com/NiluPlatform/go-nilu/crypto"
 	"github.com/NiluPlatform/go-nilu/crypto/sha3"
 	"github.com/NiluPlatform/go-nilu/log"
-	"github.com/NiluPlatform/go-nilu/p2p/nat"
 	"github.com/NiluPlatform/go-nilu/p2p/netutil"
 	"github.com/NiluPlatform/go-nilu/rlp"
 )
@@ -37,7 +36,6 @@ import (
 var (
 	errInvalidEvent = errors.New("invalid in current state")
 	errNoQuery      = errors.New("no pending query")
-	errWrongAddress = errors.New("unknown sender address")
 )
 
 const (
@@ -134,7 +132,7 @@ type timeoutEvent struct {
 	node *Node
 }
 
-func newNetwork(conn transport, ourPubkey ecdsa.PublicKey, natm nat.Interface, dbPath string, netrestrict *netutil.Netlist) (*Network, error) {
+func newNetwork(conn transport, ourPubkey ecdsa.PublicKey, dbPath string, netrestrict *netutil.Netlist) (*Network, error) {
 	ourID := PubkeyID(&ourPubkey)
 
 	var db *nodeDB
@@ -566,11 +564,8 @@ loop:
 			if lookupChn := searchInfo[res.target.topic].lookupChn; lookupChn != nil {
 				lookupChn <- net.ticketStore.radius[res.target.topic].converged
 			}
-			net.ticketStore.searchLookupDone(res.target, res.nodes, func(n *Node) []byte {
-				net.ping(n, n.addr())
-				return n.pingEcho
-			}, func(n *Node, topic Topic) []byte {
-				if n.state == known {
+			net.ticketStore.searchLookupDone(res.target, res.nodes, func(n *Node, topic Topic) []byte {
+				if n.state != nil && n.state.canQuery {
 					return net.conn.send(n, topicQueryPacket, topicQuery{Topic: topic}) // TODO: set expiration
 				} else {
 					if n.state == unknown {
@@ -634,15 +629,20 @@ loop:
 			}
 			net.refreshResp <- refreshDone
 		case <-refreshDone:
-			log.Trace("<-net.refreshDone")
-			refreshDone = nil
-			list := searchReqWhenRefreshDone
-			searchReqWhenRefreshDone = nil
-			go func() {
-				for _, req := range list {
-					net.topicSearchReq <- req
-				}
-			}()
+			log.Trace("<-net.refreshDone", "table size", net.tab.count)
+			if net.tab.count != 0 {
+				refreshDone = nil
+				list := searchReqWhenRefreshDone
+				searchReqWhenRefreshDone = nil
+				go func() {
+					for _, req := range list {
+						net.topicSearchReq <- req
+					}
+				}()
+			} else {
+				refreshDone = make(chan struct{})
+				net.refresh(refreshDone)
+			}
 		}
 	}
 	log.Trace("loop stopped")
@@ -752,7 +752,15 @@ func (net *Network) internNodeFromNeighbours(sender *net.UDPAddr, rn rpcNode) (n
 		return n, err
 	}
 	if !n.IP.Equal(rn.IP) || n.UDP != rn.UDP || n.TCP != rn.TCP {
-		err = fmt.Errorf("metadata mismatch: got %v, want %v", rn, n)
+		if n.state == known {
+			// reject address change if node is known by us
+			err = fmt.Errorf("metadata mismatch: got %v, want %v", rn, n)
+		} else {
+			// accept otherwise; this will be handled nicer with signed ENRs
+			n.IP = rn.IP
+			n.UDP = rn.UDP
+			n.TCP = rn.TCP
+		}
 	}
 	return n, err
 }
@@ -819,11 +827,10 @@ type nodeEvent uint
 //go:generate stringer -type=nodeEvent
 
 const (
-	invalidEvent nodeEvent = iota // zero is reserved
 
 	// Packet type events.
 	// These correspond to packet types in the UDP protocol.
-	pingPacket
+	pingPacket = iota + 1
 	pongPacket
 	findnodePacket
 	neighborsPacket

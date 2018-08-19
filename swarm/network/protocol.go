@@ -1,18 +1,18 @@
-// Copyright 2016 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2016 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package network
 
@@ -39,10 +39,24 @@ import (
 
 	"github.com/NiluPlatform/go-nilu/contracts/chequebook"
 	"github.com/NiluPlatform/go-nilu/log"
+	"github.com/NiluPlatform/go-nilu/metrics"
 	"github.com/NiluPlatform/go-nilu/p2p"
 	bzzswap "github.com/NiluPlatform/go-nilu/swarm/services/swap"
 	"github.com/NiluPlatform/go-nilu/swarm/services/swap/swap"
 	"github.com/NiluPlatform/go-nilu/swarm/storage"
+)
+
+//metrics variables
+var (
+	storeRequestMsgCounter    = metrics.NewRegisteredCounter("network.protocol.msg.storerequest.count", nil)
+	retrieveRequestMsgCounter = metrics.NewRegisteredCounter("network.protocol.msg.retrieverequest.count", nil)
+	peersMsgCounter           = metrics.NewRegisteredCounter("network.protocol.msg.peers.count", nil)
+	syncRequestMsgCounter     = metrics.NewRegisteredCounter("network.protocol.msg.syncrequest.count", nil)
+	unsyncedKeysMsgCounter    = metrics.NewRegisteredCounter("network.protocol.msg.unsyncedkeys.count", nil)
+	deliverRequestMsgCounter  = metrics.NewRegisteredCounter("network.protocol.msg.deliverrequest.count", nil)
+	paymentMsgCounter         = metrics.NewRegisteredCounter("network.protocol.msg.payment.count", nil)
+	invalidMsgCounter         = metrics.NewRegisteredCounter("network.protocol.msg.invalid.count", nil)
+	handleStatusMsgCounter    = metrics.NewRegisteredCounter("network.protocol.msg.handlestatus.count", nil)
 )
 
 const (
@@ -131,8 +145,6 @@ the main protocol loop that
 */
 func run(requestDb *storage.LDBDatabase, depo StorageHandler, backend chequebook.Backend, hive *Hive, dbaccess *DbAccess, sp *bzzswap.SwapParams, sy *SyncParams, networkId uint64, p *p2p.Peer, rw p2p.MsgReadWriter) (err error) {
 
-	logger := log.New("protcol")
-	logger.Info("protocol run")
 	self := &bzz{
 		storage:     depo,
 		backend:     backend,
@@ -208,6 +220,7 @@ func (self *bzz) handle() error {
 
 	case storeRequestMsg:
 		// store requests are dispatched to netStore
+		storeRequestMsgCounter.Inc(1)
 		var req storeRequestMsgData
 		if err := msg.Decode(&req); err != nil {
 			return fmt.Errorf("<- %v: %v", msg, err)
@@ -223,6 +236,7 @@ func (self *bzz) handle() error {
 
 	case retrieveRequestMsg:
 		// retrieve Requests are dispatched to netStore
+		retrieveRequestMsgCounter.Inc(1)
 		var req retrieveRequestMsgData
 		if err := msg.Decode(&req); err != nil {
 			return fmt.Errorf("<- %v: %v", msg, err)
@@ -243,6 +257,7 @@ func (self *bzz) handle() error {
 	case peersMsg:
 		// response to lookups and immediate response to retrieve requests
 		// dispatches new peer data to the hive that adds them to KADDB
+		peersMsgCounter.Inc(1)
 		var req peersMsgData
 		if err := msg.Decode(&req); err != nil {
 			return fmt.Errorf("<- %v: %v", msg, err)
@@ -252,6 +267,7 @@ func (self *bzz) handle() error {
 		self.hive.HandlePeersMsg(&req, &peer{bzz: self})
 
 	case syncRequestMsg:
+		syncRequestMsgCounter.Inc(1)
 		var req syncRequestMsgData
 		if err := msg.Decode(&req); err != nil {
 			return fmt.Errorf("<- %v: %v", msg, err)
@@ -262,6 +278,7 @@ func (self *bzz) handle() error {
 
 	case unsyncedKeysMsg:
 		// coming from parent node offering
+		unsyncedKeysMsgCounter.Inc(1)
 		var req unsyncedKeysMsgData
 		if err := msg.Decode(&req); err != nil {
 			return fmt.Errorf("<- %v: %v", msg, err)
@@ -276,6 +293,7 @@ func (self *bzz) handle() error {
 	case deliveryRequestMsg:
 		// response to syncKeysMsg hashes filtered not existing in db
 		// also relays the last synced state to the source
+		deliverRequestMsgCounter.Inc(1)
 		var req deliveryRequestMsgData
 		if err := msg.Decode(&req); err != nil {
 			return fmt.Errorf("<-msg %v: %v", msg, err)
@@ -289,6 +307,7 @@ func (self *bzz) handle() error {
 
 	case paymentMsg:
 		// swap protocol message for payment, Units paid for, Cheque paid with
+		paymentMsgCounter.Inc(1)
 		if self.swapEnabled {
 			var req paymentMsgData
 			if err := msg.Decode(&req); err != nil {
@@ -300,6 +319,7 @@ func (self *bzz) handle() error {
 
 	default:
 		// no other message is allowed
+		invalidMsgCounter.Inc(1)
 		return fmt.Errorf("invalid message code: %v", msg.Code)
 	}
 	return nil
@@ -333,6 +353,8 @@ func (self *bzz) handleStatus() (err error) {
 	if msg.Code != statusMsg {
 		return fmt.Errorf("first msg has code %x (!= %x)", msg.Code, statusMsg)
 	}
+
+	handleStatusMsgCounter.Inc(1)
 
 	if msg.Size > ProtocolMaxMsgSize {
 		return fmt.Errorf("message too long: %v > %v", msg.Size, ProtocolMaxMsgSize)

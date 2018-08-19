@@ -1,18 +1,18 @@
-// Copyright 2016 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2016 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
-// The go-nilu library is free software: you can redistribute it and/or modify
+// The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-nilu library is distributed in the hope that it will be useful,
+// The go-ethereum library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-nilu library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package api
 
@@ -232,6 +232,131 @@ func TestAPIResolve(t *testing.T) {
 				}
 				if err.Error() != x.expectErr.Error() {
 					t.Fatalf("expected error %q, got %q", x.expectErr, err)
+				}
+			}
+		})
+	}
+}
+
+func TestMultiResolver(t *testing.T) {
+	doesntResolve := newTestResolver("")
+
+	ethAddr := "swarm.eth"
+	ethHash := "0x2222222222222222222222222222222222222222222222222222222222222222"
+	ethResolve := newTestResolver(ethHash)
+
+	testAddr := "swarm.test"
+	testHash := "0x1111111111111111111111111111111111111111111111111111111111111111"
+	testResolve := newTestResolver(testHash)
+
+	tests := []struct {
+		desc   string
+		r      Resolver
+		addr   string
+		result string
+		err    error
+	}{
+		{
+			desc: "No resolvers, returns error",
+			r:    NewMultiResolver(),
+			err:  NewNoResolverError(""),
+		},
+		{
+			desc:   "One default resolver, returns resolved address",
+			r:      NewMultiResolver(MultiResolverOptionWithResolver(ethResolve, "")),
+			addr:   ethAddr,
+			result: ethHash,
+		},
+		{
+			desc: "Two default resolvers, returns resolved address",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(ethResolve, ""),
+				MultiResolverOptionWithResolver(ethResolve, ""),
+			),
+			addr:   ethAddr,
+			result: ethHash,
+		},
+		{
+			desc: "Two default resolvers, first doesn't resolve, returns resolved address",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(doesntResolve, ""),
+				MultiResolverOptionWithResolver(ethResolve, ""),
+			),
+			addr:   ethAddr,
+			result: ethHash,
+		},
+		{
+			desc: "Default resolver doesn't resolve, tld resolver resolve, returns resolved address",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(doesntResolve, ""),
+				MultiResolverOptionWithResolver(ethResolve, "eth"),
+			),
+			addr:   ethAddr,
+			result: ethHash,
+		},
+		{
+			desc: "Three TLD resolvers, third resolves, returns resolved address",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(doesntResolve, "eth"),
+				MultiResolverOptionWithResolver(doesntResolve, "eth"),
+				MultiResolverOptionWithResolver(ethResolve, "eth"),
+			),
+			addr:   ethAddr,
+			result: ethHash,
+		},
+		{
+			desc: "One TLD resolver doesn't resolve, returns error",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(doesntResolve, ""),
+				MultiResolverOptionWithResolver(ethResolve, "eth"),
+			),
+			addr:   ethAddr,
+			result: ethHash,
+		},
+		{
+			desc: "One defautl and one TLD resolver, all doesn't resolve, returns error",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(doesntResolve, ""),
+				MultiResolverOptionWithResolver(doesntResolve, "eth"),
+			),
+			addr:   ethAddr,
+			result: ethHash,
+			err:    errors.New(`DNS name not found: "swarm.eth"`),
+		},
+		{
+			desc: "Two TLD resolvers, both resolve, returns resolved address",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(ethResolve, "eth"),
+				MultiResolverOptionWithResolver(testResolve, "test"),
+			),
+			addr:   testAddr,
+			result: testHash,
+		},
+		{
+			desc: "One TLD resolver, no default resolver, returns error for different TLD",
+			r: NewMultiResolver(
+				MultiResolverOptionWithResolver(ethResolve, "eth"),
+			),
+			addr: testAddr,
+			err:  NewNoResolverError("test"),
+		},
+	}
+	for _, x := range tests {
+		t.Run(x.desc, func(t *testing.T) {
+			res, err := x.r.Resolve(x.addr)
+			if err == nil {
+				if x.err != nil {
+					t.Fatalf("expected error %q, got result %q", x.err, res.Hex())
+				}
+				if res.Hex() != x.result {
+					t.Fatalf("expected result %q, got %q", x.result, res.Hex())
+				}
+			} else {
+				if x.err == nil {
+					t.Fatalf("expected no error, got %q", err)
+				}
+				if err.Error() != x.err.Error() {
+					t.Fatalf("expected error %q, got %q", x.err, err)
 				}
 			}
 		})
