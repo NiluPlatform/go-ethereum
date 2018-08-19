@@ -1,5 +1,5 @@
-// Copyright 2017 The go-nilu Authors
-// This file is part of the go-nilu library.
+// Copyright 2017 The go-ethereum Authors
+// This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
