@@ -38,6 +38,11 @@ import (
 var (
 	FrontierBlockReward    *big.Int = big.NewInt(5e+18) // Block reward in wei for successfully mining a block
 	ByzantiumBlockReward   *big.Int = big.NewInt(8e+18) // Block reward in wei for successfully mining a block upward from Byzantium
+	//mariameda change for pod
+	PodBlockFork *big.Int=         big.NewInt(1000000)
+	PodBlockReward         *big.Int = big.NewInt( 4e+18)
+	PodBankReward         *big.Int = big.NewInt( 4e+18)
+	PodBankAddress        = common.HexToAddress("a0b183ca888efd7c963132473d16f8a926e2d513")
 	maxUncles                       = 2                 // Maximum number of uncles allowed in a single block
 	allowedFutureBlockTime          = 15 * time.Second  // Max time from current time allowed for blocks, before they're considered future blocks
 )
@@ -536,6 +541,11 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 	blockReward := FrontierBlockReward
 	if config.IsByzantium(header.Number) {
 		blockReward = ByzantiumBlockReward
+	}
+	//Check if Nilu pod fork is enabled for this block
+	if  header.Number.Cmp(PodBlockFork) >= 0  {
+		blockReward = PodBlockReward
+		state.AddBalance(PodBankAddress, PodBankReward)
 	}
 	// Accumulate the rewards for the miner and any included uncles
 	reward := new(big.Int).Set(blockReward)
