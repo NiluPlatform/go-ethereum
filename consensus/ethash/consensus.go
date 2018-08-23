@@ -543,7 +543,7 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		blockReward = ByzantiumBlockReward
 	}
 	//Check if Nilu pod fork is enabled for this block
-	if  header.Number.Cmp(PodBlockFork) >= 0  {
+	if  header.Number != nil && header.Number.Cmp(PodBlockFork) >= 0  {
 		blockReward = PodBlockReward
 		state.AddBalance(PodBankAddress, PodBankReward)
 	}
