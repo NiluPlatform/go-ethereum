@@ -43,6 +43,16 @@ var (
 	PodBlockReward         *big.Int = big.NewInt( 4e+18)
 	PodBankReward         *big.Int = big.NewInt( 4e+18)
 	PodBankAddress        = common.HexToAddress("a0b183ca888efd7c963132473d16f8a926e2d513")
+	PodBlockForkHalving1 *big.Int=         big.NewInt(4000000)
+	PodBlockRewardHalving1 *big.Int = big.NewInt( 2e+18)
+	PodBankRewardHalving1 *big.Int = big.NewInt( 2e+18)
+	PodBlockForkHalving2 *big.Int=         big.NewInt(12000000)
+	PodBlockRewardHalving2 *big.Int = big.NewInt( 1e+18)
+	PodBankRewardHalving2 *big.Int = big.NewInt( 1e+18)
+	PodBlockForkHalving3 *big.Int=         big.NewInt(28000000)
+	PodBlockRewardHalving3 *big.Int = big.NewInt( 5e+17)
+	PodBankRewardHalving3 *big.Int = big.NewInt( 5e+17)
+	PodBlockForkNoReward *big.Int=         big.NewInt(60000000)
 	maxUncles                       = 2                 // Maximum number of uncles allowed in a single block
 	allowedFutureBlockTime          = 15 * time.Second  // Max time from current time allowed for blocks, before they're considered future blocks
 )
@@ -542,11 +552,25 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 	if config.IsByzantium(header.Number) {
 		blockReward = ByzantiumBlockReward
 	}
-	//Check if Nilu pod fork is enabled for this block
-	if  header.Number != nil && header.Number.Cmp(PodBlockFork) >= 0  {
-		blockReward = PodBlockReward
-		state.AddBalance(PodBankAddress, PodBankReward)
+	//Check if Nilu pod fork is enabled for this block and then apply halving rules
+	if  header.Number != nil {
+		if header.Number.Cmp(PodBlockFork) >= 0 && header.Number.Cmp(PodBlockForkHalving1) <= 0 {
+			blockReward = PodBlockReward
+			state.AddBalance(PodBankAddress, PodBankReward)
+		} else if header.Number.Cmp(PodBlockForkHalving1) > 0 && header.Number.Cmp(PodBlockForkHalving2) <= 0 {
+			blockReward = PodBlockRewardHalving1
+			state.AddBalance(PodBankAddress, PodBankRewardHalving1)
+		} else if header.Number.Cmp(PodBlockForkHalving2) > 0 && header.Number.Cmp(PodBlockForkHalving3) <= 0 {
+			blockReward = PodBlockRewardHalving2
+			state.AddBalance(PodBankAddress, PodBankRewardHalving2)
+		} else if header.Number.Cmp(PodBlockForkHalving3) > 0 && header.Number.Cmp(PodBlockForkNoReward) <= 0 {
+			blockReward = PodBlockRewardHalving3
+			state.AddBalance(PodBankAddress, PodBankRewardHalving3)
+		} else if header.Number.Cmp(PodBlockForkNoReward) > 0 {
+			blockReward = big.NewInt(0);
+		}
 	}
+
 	// Accumulate the rewards for the miner and any included uncles
 	reward := new(big.Int).Set(blockReward)
 	r := new(big.Int)
