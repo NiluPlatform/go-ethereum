@@ -43,7 +43,7 @@ var (
 	PodBlockReward         *big.Int = big.NewInt( 4e+18)
 	PodBankReward         *big.Int = big.NewInt( 4e+18)
 	PodBankAddress        = common.HexToAddress("a0b183ca888efd7c963132473d16f8a926e2d513")
-	PodBlockForkHalving1 *big.Int=         big.NewInt(4000000)
+	PodBlockForkHalving1 *big.Int=         big.NewInt(4150000)
 	PodBlockRewardHalving1 *big.Int = big.NewInt( 2e+18)
 	PodBankRewardHalving1 *big.Int = big.NewInt( 2e+18)
 	PodBlockForkHalving2 *big.Int=         big.NewInt(12000000)
